@@ -77,7 +77,7 @@ int watch_R_flag(char* message, struct ether_header* eptr, struct ip6_hdr* ipptr
 
 /*Test if the NA is doing Duplicate Address Detection DOS
  */
-int watch_dad_dos(char* message, struct ether_header* eptr, struct ip6_hdr* ipptr, struct nd_neighbor_advert* naptr, int new_eth);
+int watch_dad_dos(char* message, uint16_t vlan_id, struct ether_header* eptr, struct ip6_hdr* ipptr, struct nd_neighbor_advert* naptr, int new_eth);
 
 
 #endif

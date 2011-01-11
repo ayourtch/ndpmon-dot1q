@@ -718,6 +718,7 @@ void parse_cache(char *filename)
 			struct in6_addr lla;
 			struct ether_addr mac, eth;
 			xmlNode *param = neighbor->children;
+			uint16_t vlan_id;
 
 			while(param != NULL)
 			{
@@ -728,12 +729,12 @@ void parse_cache(char *filename)
 						c=(char *)XML_GET_CONTENT(param->children);
 						memcpy(&mac,ether_aton(c),sizeof(struct ether_addr));
 /*						memcpy(&mac,ether_aton((char *)XML_GET_CONTENT(param->children)),sizeof(struct ether_addr));	*/
-						add_neighbor(&neighbors, mac);
+						add_neighbor(&neighbors, vlan_id, mac);
 					}
 					else if( !STRCMP(param->name,"time") )
 					{
 						c=(char *)XML_GET_CONTENT(param->children);
-						set_neighbor_timer(&neighbors, mac,atoi(c));
+						set_neighbor_timer(&neighbors, vlan_id, mac,atoi(c));
 /*						set_neighbor_timer(&neighbors, mac,atoi((char *)XML_GET_CONTENT(param->children)));		*/
 					}
 					else if( !STRCMP(param->name,"lla") )
@@ -741,7 +742,7 @@ void parse_cache(char *filename)
 						if(param->children != NULL)
 						{
 							inet_pton(AF_INET6,(char *)XML_GET_CONTENT(param->children), &lla);
-							set_neighbor_lla(&neighbors, mac, lla);
+							set_neighbor_lla(&neighbors, vlan_id, mac, lla);
 						}
 					}
 					else if( !STRCMP(param->name,"addresses") )
@@ -756,7 +757,7 @@ void parse_cache(char *filename)
 									struct in6_addr addr;
 									struct _xmlAttr *attr = address->properties;
 									inet_pton(AF_INET6,(char *)XML_GET_CONTENT(address->children), &addr);
-									add_neighbor_ip(&neighbors, mac, addr);
+									add_neighbor_ip(&neighbors, vlan_id, mac, addr);
 
 									while(attr != NULL)
 									{
@@ -764,11 +765,11 @@ void parse_cache(char *filename)
 										{
 											if( !STRCMP(attr->name,"lastseen") )
 											{
-												set_neighbor_address_timer(&neighbors, mac, addr, (time_t) atoi((const char *)(attr->children->content)));
+												set_neighbor_address_timer(&neighbors, vlan_id, mac, addr, (time_t) atoi((const char *)(attr->children->content)));
 											}
 											else if ( !STRCMP(attr->name,"firstseen") )
 											{
-												set_neighbor_first_address_timer(&neighbors, mac, addr, (time_t) atoi((const char *)(attr->children->content)));
+												set_neighbor_first_address_timer(&neighbors, vlan_id, mac, addr, (time_t) atoi((const char *)(attr->children->content)));
 											}
 										}
 										attr = attr->next;
@@ -791,7 +792,7 @@ void parse_cache(char *filename)
 									struct _xmlAttr *attr = old->properties;
 									
 									memcpy(&eth,ether_aton((char *)XML_GET_CONTENT(old->children)),sizeof(struct ether_addr));
-									add_neighbor_old_mac(&neighbors, lla, eth);
+									add_neighbor_old_mac(&neighbors, vlan_id, lla, eth);
 									
 									while(attr != NULL)
 									{
@@ -799,7 +800,7 @@ void parse_cache(char *filename)
 										{
 											if( !STRCMP(attr->name,"last") )
 											{
-												neighbor_set_last_mac(&neighbors, lla, eth);
+												neighbor_set_last_mac(&neighbors, vlan_id, lla, eth);
 											}
 										}
 										attr = attr->next;

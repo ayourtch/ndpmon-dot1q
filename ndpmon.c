@@ -228,7 +228,7 @@ void callback(u_char *args,const struct pcap_pkthdr* hdr,const u_char*
 					if(!IN6_IS_ADDR_UNSPECIFIED(&ipptr->ip6_src))
 					{
 						src_eth = (struct ether_addr *) eptr->ether_shost;
-						new_station(&neighbors,*src_eth,ipptr->ip6_src, &new_eth);
+						new_station(&neighbors,vlan_id,*src_eth,ipptr->ip6_src, &new_eth);
 					}
 					general_tests = 1;
 					break;
@@ -242,7 +242,7 @@ void callback(u_char *args,const struct pcap_pkthdr* hdr,const u_char*
 						print_ra(*raptr);
 					}
 
-					new_station(&neighbors,*src_eth,ipptr->ip6_src, &new_eth);
+					new_station(&neighbors,vlan_id,*src_eth,ipptr->ip6_src, &new_eth);
 					watch_ra(message, packet, eptr, ipptr, hdr->len);
 
 					general_tests = 1;
@@ -259,7 +259,7 @@ void callback(u_char *args,const struct pcap_pkthdr* hdr,const u_char*
 					if(!IN6_IS_ADDR_UNSPECIFIED(&ipptr->ip6_src))
 					{
 						src_eth = (struct ether_addr *) eptr->ether_shost;
-						new_station(&neighbors,*src_eth,ipptr->ip6_src, &new_eth);
+						new_station(&neighbors,vlan_id,*src_eth,ipptr->ip6_src, &new_eth);
 					}
 					watch_dad(eptr, ipptr, nsptr);
 					general_tests = 1;
@@ -274,8 +274,8 @@ void callback(u_char *args,const struct pcap_pkthdr* hdr,const u_char*
 						print_na(*naptr);
 					}
 
-					new_station(&neighbors,*src_eth,ipptr->ip6_src, &new_eth);
-					watch_dad_dos(message, eptr, ipptr, naptr, new_eth);
+					new_station(&neighbors,vlan_id,*src_eth,ipptr->ip6_src, &new_eth);
+					watch_dad_dos(message, vlan_id, eptr, ipptr, naptr, new_eth);
 					watch_R_flag(message, eptr, ipptr, naptr);
 
 					general_tests = 1;
@@ -354,6 +354,7 @@ void usage()
 /*To write cache before exiting*/
 void handler(int n)
 {
+	int i;
 	if(learning)
 		write_config();
 
@@ -365,8 +366,10 @@ void handler(int n)
 	syslog(LOG_NOTICE,"Program Stopped...");
 	closelog();
 	/* free data structures */
-	clean_routers(&routers);
-	clean_neighbors(&neighbors);
+	for(i=0;i<=4095;i++) {
+		clean_routers(&routers);
+		clean_neighbors(&neighbors, i);
+	}
 #ifdef _MACRESOLUTION_
 	clean_manufacturer(&manuf);
 #endif

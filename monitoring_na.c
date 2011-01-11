@@ -92,7 +92,7 @@ int watch_R_flag(char* message, struct ether_header* eptr, struct ip6_hdr* ipptr
 /*Test if the NA is doing Duplicate Address Detection DOS
   Detect if a host is responding a wrong IPv6 not corresponding to its mac addr
  */
-int watch_dad_dos(char* message, struct ether_header* eptr, struct ip6_hdr* ipptr, struct nd_neighbor_advert* naptr, int new_eth)
+int watch_dad_dos(char* message, uint16_t vlan_id, struct ether_header* eptr, struct ip6_hdr* ipptr, struct nd_neighbor_advert* naptr, int new_eth)
 {
 	neighbor_list_t *tmp = neighbors;
 	struct in6_addr wanted_addr = *get_last_dad_addr();
@@ -136,7 +136,7 @@ int watch_dad_dos(char* message, struct ether_header* eptr, struct ip6_hdr* ippt
 					char ip_address[40];
 					ipv6_ntoa(ip_address, ipptr->ip6_src);
 					ipv6_ntoa(toto,(tmp->lla));
-					if (!neighbor_has_ip(neighbors, *src_eth, naptr->nd_na_target))
+					if (!neighbor_has_ip(neighbors, vlan_id, *src_eth, naptr->nd_na_target))
 					{
 						dos = 1;
 					}

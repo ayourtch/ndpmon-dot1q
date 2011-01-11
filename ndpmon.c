@@ -66,6 +66,23 @@ int learning = 0;
 
 static pcap_t* descr = NULL;
 
+int is_ipv6_pkt(struct ether_header *eptr) {
+	uint16_t *vlan_ptr;
+	uint16_t *vlan_ether_ptr;
+	if (ntohs (eptr->ether_type) ==  ETHERTYPE_IPV6) {
+		return 4095;
+	}
+	if (ntohs (eptr->ether_type) == ETHERTYPE_VLAN) {
+		vlan_ptr = (void*)&eptr->ether_type;
+		vlan_ptr++;
+		vlan_ether_ptr = vlan_ptr + 1;
+		if(ntohs(*vlan_ether_ptr) == ETHERTYPE_IPV6) {
+			return ntohs(*vlan_ptr);
+		}
+	}
+	return 0;
+}
+
 
 /*Function called each time that a packet pass the filter and is captured*/
 void callback(u_char *args,const struct pcap_pkthdr* hdr,const u_char*
@@ -93,6 +110,8 @@ void callback(u_char *args,const struct pcap_pkthdr* hdr,const u_char*
 	int new_eth =0;/*Use to detect dad dos attack, 1 if NA annouces a new station*/
 	int type_58 = 0;
 	char message[NOTIFY_BUFFER_SIZE];
+	uint16_t vlan_id, is_ipv6;
+	int dot1q_delta = 0;
 
 	const time_t* time = (const time_t*) &(hdr->ts).tv_sec;
 
@@ -112,14 +131,19 @@ void callback(u_char *args,const struct pcap_pkthdr* hdr,const u_char*
 	}
 
 	/* Info from the IPV6 layer */
-	if (ntohs (eptr->ether_type) ==  ETHERTYPE_IPV6)
+        is_ipv6 = vlan_id = is_ipv6_pkt(eptr);
+	if (vlan_id)
 	{
 		if(DEBUG)
 		{
 			fprintf(stderr,"Ethernet type hex:%x dec: it's an IPv6 packet\n", ntohs(eptr->ether_type));
 		}
+		if(vlan_id != 4095)
+		{
+			dot1q_delta = 4;
+		}
 
-		ipptr = (struct ip6_hdr*)(packet + ETHERNET_SIZE);
+		ipptr = (struct ip6_hdr*)(packet + ETHERNET_SIZE + dot1q_delta);
 		
 		if(DEBUG)
 		{
@@ -130,7 +154,7 @@ void callback(u_char *args,const struct pcap_pkthdr* hdr,const u_char*
 		/*Jumping optional headers if there are*/
 		if(ipptr->ip6_nxt != 58)
 		{
-			opt_hdr = (struct ip6_ext*)(packet + ETHERNET_SIZE + IPV6_SIZE);
+			opt_hdr = (struct ip6_ext*)(packet + ETHERNET_SIZE + dot1q_delta + IPV6_SIZE);
 			if(DEBUG)
 			{
 				fprintf(stderr,"next option header : %d\n",opt_hdr->ip6e_nxt);
@@ -162,7 +186,7 @@ void callback(u_char *args,const struct pcap_pkthdr* hdr,const u_char*
 		}
 		else
 		{
-			icmpptr = (struct icmp6_hdr*)(packet + ETHERNET_SIZE + IPV6_SIZE);
+			icmpptr = (struct icmp6_hdr*)(packet + ETHERNET_SIZE + dot1q_delta + IPV6_SIZE);
 			/*Info from the ICMPv6 layer*/
 			if(DEBUG)
 			{
@@ -194,7 +218,7 @@ void callback(u_char *args,const struct pcap_pkthdr* hdr,const u_char*
 			{
 				case  ND_ROUTER_SOLICIT:
 					fprintf(stderr,"----- ND_ROUTER_SOLICIT -----\n");
-					rsptr = (struct nd_router_solicit*) (packet + ETHERNET_SIZE + IPV6_SIZE);
+					rsptr = (struct nd_router_solicit*) (packet + ETHERNET_SIZE + dot1q_delta + IPV6_SIZE);
 					if(DEBUG)
 					{
 						print_rs(*rsptr);
@@ -212,7 +236,7 @@ void callback(u_char *args,const struct pcap_pkthdr* hdr,const u_char*
 				case ND_ROUTER_ADVERT:
 					fprintf(stderr,"----- ND_ROUTER_ADVERT -----\n");
 					src_eth = (struct ether_addr *) eptr->ether_shost;
-					raptr = (struct nd_router_advert*) (packet + ETHERNET_SIZE + IPV6_SIZE);
+					raptr = (struct nd_router_advert*) (packet + ETHERNET_SIZE + dot1q_delta + IPV6_SIZE);
 					if(DEBUG)
 					{
 						print_ra(*raptr);
@@ -226,7 +250,7 @@ void callback(u_char *args,const struct pcap_pkthdr* hdr,const u_char*
 
 				case ND_NEIGHBOR_SOLICIT:
 					fprintf(stderr,"----- ND_NEIGHBOR_SOLICIT -----\n");
-					nsptr = (struct  nd_neighbor_solicit*) (packet + ETHERNET_SIZE + IPV6_SIZE);
+					nsptr = (struct  nd_neighbor_solicit*) (packet + ETHERNET_SIZE + dot1q_delta + IPV6_SIZE);
 					if(DEBUG)
 					{
 						print_ns(*nsptr);
@@ -244,7 +268,7 @@ void callback(u_char *args,const struct pcap_pkthdr* hdr,const u_char*
 				case ND_NEIGHBOR_ADVERT:
 					fprintf(stderr,"----- ND_NEIGHBOR_ADVERT -----\n");
 					src_eth = (struct ether_addr *) eptr->ether_shost;
-					naptr = (struct nd_neighbor_advert*) (packet + ETHERNET_SIZE + IPV6_SIZE );
+					naptr = (struct nd_neighbor_advert*) (packet + ETHERNET_SIZE + dot1q_delta + IPV6_SIZE );
 					if(DEBUG)
 					{
 						print_na(*naptr);
@@ -258,7 +282,7 @@ void callback(u_char *args,const struct pcap_pkthdr* hdr,const u_char*
 					break;
 
 				case ND_REDIRECT:
-					rdptr = (struct nd_redirect*) (packet + ETHERNET_SIZE + IPV6_SIZE);
+					rdptr = (struct nd_redirect*) (packet + ETHERNET_SIZE + dot1q_delta + IPV6_SIZE);
 					print_rd(*rdptr);
 
 					watch_rd_src(message, eptr, ipptr);
@@ -266,7 +290,7 @@ void callback(u_char *args,const struct pcap_pkthdr* hdr,const u_char*
 					break;
 #ifdef _COUNTERMEASURES_
 				case ND_NDPMON_PRESENT:
-					npptr = (struct nd_ndpmon_present*) (packet + ETHERNET_SIZE + IPV6_SIZE);
+					npptr = (struct nd_ndpmon_present*) (packet + ETHERNET_SIZE + dot1q_delta + IPV6_SIZE);
                                         if (npptr->nd_np_code==ND_NP_CODE) {
 						fprintf(stderr,"----- ND_NDPMON_PRESENT -----\n");
 						watch_ndpmon_present(message, packet, eptr, ipptr, npptr, hdr->len);
@@ -409,7 +433,8 @@ int main(int argc,char **argv)
 	FILE *dat = NULL; /* for the discovery stats */
 
 	interface = NULL;
-	filter = "icmp6";
+	//filter = "icmp6 or vlan and icmp6";
+	filter = "vlan and icmp6";
 	nb_packet=0;/*all packets are captured until kill*/
 
 

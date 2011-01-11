@@ -1,0 +1,11 @@
+FLAGS=-Wall -pedantic -I../.. @CFLAGS@ @OPTIONS@
+CC=@CC@
+LIB=@LIBS@
+all: mac_resolv.o
+
+clean: 
+	-rm -rf *~ *.o 
+
+mac_resolv.o: mac_resolv.c
+	-./make-manuf
+	$(CC) $(FLAGS) `xml2-config  --cflags` -c mac_resolv.c -o mac_resolv.o

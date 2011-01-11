@@ -1,0 +1,40 @@
+/* This file contains additional documentation. */
+
+/**
+@mainpage
+
+Welcome to the source code documentation of NDPMon.
+
+@htmlonly
+<table width="100%" class="mainpage">
+<tr><td width="50%" class="mainpage-core">
+@endhtmlonly
+
+@section ndpmon-core
+
+The core of ndpmon is not yet documented.
+
+@htmlonly
+</td><td width="50%" class="mainpage-plugins">
+@endhtmlonly
+
+@section plugins Plugins
+
+@subsection plugin-macresolv Mac Resolution
+
+The macresolv plugin is not yet documented.
+
+@subsection plugin-countermeasures Countermeasures
+
+The countermeasures plugin provides active reactions to attacks on
+the Neighbor Discovery Protocol. It can be enabled using the configure option
+@c --enable-countermeasures.
+
+See @ref countermeasures for a detailed source code documentation.
+
+@htmlonly
+</table>
+@endhtmlonly
+
+
+*/

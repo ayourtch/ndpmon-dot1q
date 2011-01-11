@@ -1,0 +1,315 @@
+/* This file contains additional documentation. */
+
+/**
+@page countermeasures Countermeasures plugin
+
+The counter measures plugin provides active reactions to attacks on the NDP. It uses the @ref icmp_lib to send counter advertisements on the link.
+
+The following sections describe the different counter measures.
+
+@section cmlist Counter Measures
+
+@li @ref cm_kill_illegitimate_router
+@li @ref cm_kill_wrong_prefix
+@li @ref cm_propagate_router_params
+@li @ref cm_propagate_neighbor_mac
+
+@section cm_on_link Note: Counter measures on the link
+
+The plugin keeps track of the countermeasures sent to
+decide if incoming captured packets shall be dropped or not. This is required to prevent
+counter-counter-...measures because a NDPMon instance listening on an interface captures
+normal NDP traiffc as well as its own countermeasures sent on this interface. As the counter-
+measures are also faked advertisements, they would otherwise trigger other countermeasures.
+
+However, the plugin does not store the whole packet content but only a SHA-1 hash of
+the packet content in order to reduce memory consumption, and to deal with a constant size
+data type.
+
+See also @ref counter_measures_on_link.h .
+
+@section cm_guards Note: Guards for the different counter measures
+
+Guards for the different countermeasures Not every administrator may welcome a
+monitoring tool that autonomously responds to events on the network. There are two ways
+to control the reactions of the countermeasures plugin:
+@li Build NDPMon without the option --enable-countermeasures. This will deactivate
+all behavior related to this module.
+@li Use the file config_ndpmon.xml to control the different countermeasure guards.
+
+The guards are used to decide if a call to a countermeasure function does actually result
+in a counter advertisement or if it is ignored. The decision is made according to a strategy
+which is set in the configuration. Currently the following strategies are implemented:
+
+@li @c SUPPRESS The countermeasure is turned off.
+@li @c RESPOND Each call to this countermeasure results in a reaction.
+@li <TT>CEASE AFTER max</TT> For max calls, each call to this countermeasure results in a reaction.
+After the max'th call, the countermeasure is suppressed. max may be a number up to
+255. This may be used to prevent NDPMon from contributing to Denial of Service,
+but to have a "first response" countermeasure.
+@li <TT>LAUNCH AFTER min</TT> For min calls, this countermeasure is suppressed. After the min'th
+call, each call to the countermeasure results in a reaction. min may be a number up
+to 255.
+
+See also @ref counter_measures_guard.h .
+
+@section cm_howto_new Steps to implement a new counter measure
+
+@li Implement the cm_(counter measure name) function
+@li Add a new guard for this counter measure in counter_measure.c
+@li Extends the function cm_guard_init_all() and cm_guard_all_to_representation() for the new guard.
+@li Extend parser.c to parse and write the configuration for the new guard.
+@li Plug the counter measure into the appropriate monitoring file, remember to put @c IFDEFs to test for @c _COUNTERMEASURES_.
+
+@page cm_kill_illegitimate_router Counter Measure cm_kill_illegitimate_router
+
+@section cm_kill_illegitimate_router_description Description
+
+If NDPMon recognizes a router advertisment from a router not in the router list it
+sends a faked zero lifetime RA for this router.
+
+The detection is done by watch_ra.
+
+See also cm_kill_illegitimate_router().
+
+@code
+----- ND_ROUTER_ADVERT -----
+Reset timer for 0:12:3f:77:74:ad fe80:0:0:0:212:3fff:fe77:74ad
+Warning: wrong ipv6 router 0:12:3f:77:74:ad fe80:0:0:0:212:3fff:fe77:74ad 
+[counter-measures]: Sent zero lifetime advertisement for illegitimate router.
+------------------
+@endcode
+
+@section cm_kill_illegitimate_router_test Test
+
+The following faked router advertisement was created by a \ref icmp_lib example.
+
+@code
+ ./example_fake_router eth0 fe80:0:0:0:212:3fff:fe77:74ad 2001::0 16
+@endcode
+
+The @c tcpdump of the router advertisement:
+
+@code
+10:55:19.827590 IP6 (hlim 255, next-header: ICMPv6 (58), length: 56)
+  fe80::212:3fff:fe77:74ad > ip6-allnodes:
+  [icmp6 sum ok] ICMP6, router advertisement, length 56
+        hop limit 64, Flags [none], pref medium, router lifetime 65535s, reachable time 0s, retrans time 0s
+        source link-address option (1), length 8 (1): 00:12:3f:77:74:ad
+        prefix info option (3), length 32 (4): 2001::/16, Flags [onlink, auto], valid time infinitys, pref. time infinitys
+@endcode
+
+It resulted in the following counter advertisement (note the zero lifetime and the absence of any options):
+
+@code
+10:55:21.187753 IP6 (hlim 255, next-header: ICMPv6 (58), length: 16)
+  fe80::212:3fff:fe77:74ad > ip6-allnodes:
+  [icmp6 sum ok] ICMP6, router advertisement, length 16
+        hop limit 64, Flags [none], pref medium, router lifetime 0s, reachable time 0s, retrans time 0s
+@endcode
+
+Without NDPMon running, the faked router was listed on tounes as a default router:
+
+@code
+% ip -6 route
+[...]
+default via fe80::204:75ff:febe:e938 dev eth0  proto kernel  metric 1024  expires 10794sec mtu 1280 advmss 1220 hoplimit 64
+default via fe80::212:3fff:fe77:74ad dev eth0  proto kernel  metric 1024  expires 65287sec mtu 1280 advmss 1220 hoplimit 64
+@endcode
+
+When NDPMon countered the attack, the illegitimate router was removed from the default router list.
+
+@page cm_kill_wrong_prefix Counter Measure cm_kill_wrong_prefix
+
+@section cm_kill_wrong_prefix_description Description
+
+If NDPMon captures a router advertisement from a router in the router list (legitimate router)
+but the RA contains a prefix information option with a prefix not listed for this router, we assume this to
+be a bogus (onlink/autoconf) prefix attack.
+
+The counter measure is to fake a RA for the legitimate router with all RA params set according to
+those in the router list and a prefix information option for the bogus prefix with valid and
+preferred lifetime of zero.
+
+This ensures that hosts listening on the link:
+@li set all RA params overidden by the bogus RA (such as curhoplimit etc.) to their former correct values.
+@li remove the bogus prefix from their routing table
+
+See also cm_kill_wrong_prefix().
+
+@section cm_kill_wrong_prefix_test Test
+
+To advertise a bogus prefix,@c fake_router6 may be used. The bogus prefix is 2001:660:4501:3201::/64, the correct prefix being
+...:3202::/64.
+
+@code
+ ./fake_router6 eth0 fe80::204:75ff:febe:e938 2001:660:4501:3201::/64 1280 0:4:75:be:e9:38
+@endcode
+
+NDPMon alerts the administrator about wrong router advertisement parameters and reacts (see @ref cm_propagate_router_params) but it
+also reacts to the wrong prefix and sends the RA with zero valid and preferred time for this prefix.
+
+@code
+----- ND_ROUTER_ADVERT -----
+Reset timer for 0:4:75:be:e9:38 fe80:0:0:0:204:75ff:febe:e938
+Warning: wrong RA param: curhoplimit 255 
+Warning: wrong RA param: router_lifetime 65535 
+Warning: wrong RA param: reachable_timer 16384000 
+Warning: wrong RA param: retrans_timer 1966080 
+[counter-measures]: Sent propagate params router advertisement for wrong params.
+Warning: wrong prefix 2001:660:4501:3201 0:4:75:be:e9:38 fe80:0:0:0:204:75ff:febe:e938 
+[counter-measures]: Sent prefix zero lifetime advertisement for wrong prefix.
+------------------
+
+---- ICMP packet ----
+[counter-measures]: Packet dropped as it is a NDPMon counter measure.
+------------------
+
+---- ICMP packet ----
+[counter-measures]: Packet dropped as it is a NDPMon counter measure.
+------------------
+@endcode
+
+These are the bogus and the two counter measure advertisements captured using @c tcpdump:
+
+@code
+09:02:21.082531 IP6 (hlim 255, next-header ICMPv6 (58) payload length: 64) fe80::204:75ff:febe:e938 > ip6-allnodes: [icmp6 sum ok] ICMP6, router advertisement, length 64
+	hop limit 255, Flags [none], pref high, router lifetime 65535s, reachable time 16384000s, retrans time 1966080s
+	  mtu option (5), length 8 (1):  1280
+	  prefix info option (3), length 32 (4): 2001:660:4501:3201::/64, Flags [onlink, auto], valid time infinitys, pref. time infinitys
+	  source link-address option (1), length 8 (1): 00:04:75:be:e9:38
+09:02:21.085545 IP6 (hlim 255, next-header ICMPv6 (58) payload length: 16) fe80::204:75ff:febe:e938 > ip6-allnodes: [icmp6 sum ok] ICMP6, router advertisement, length 16
+	hop limit 64, Flags [none], pref medium, router lifetime 10800s, reachable time 0s, retrans time 0s
+09:02:21.086265 IP6 (hlim 255, next-header ICMPv6 (58) payload length: 48) fe80::204:75ff:febe:e938 > ip6-allnodes: [icmp6 sum ok] ICMP6, router advertisement, length 48
+	hop limit 64, Flags [none], pref medium, router lifetime 10800s, reachable time 0s, retrans time 0s
+	  prefix info option (3), length 32 (4): 2001:660:4501:3201::/64, Flags [onlink, auto], valid time 0s, pref. time 0s
+@endcode
+
+This counter measure succeeds in keeping the bogus prefix out of the routing tables.
+
+@page cm_propagate_router_params Counter Measure cm_propagate_router_params
+
+@section cm_propagate_router_params_description Description
+
+If NDPMon captures a Router Advertisement from a legitimate router but the params of the RA
+do not correspond to those stored in the router list we assume this to be a bogus parameter
+attack. Examples for such an attack include crush_hoplimit in case of lowering the hop limit or kill_legitimate_router in
+case of a zero value in the RA's router lifetime field.
+
+The counter measure reacts to this attack by sending a RA for the legitimate router with all
+parameters set according to those stored in the router list entry. We make the assumption that
+RA parameters are not re-configured by the administrator once NDPMon has finished it's learning phase.
+
+This ensures that hosts listening on the link:
+@li set all RA params overidden by the bogus RA (such as curhoplimit etc.) to their former correct values.
+
+See also cm_propagate_router_params().
+
+@section cm_propagate_router_params_test Test
+
+This counter measure was tested with the crushhoplimit attack:
+
+@code
+ ./imitate_router6 eth0 crushhoplimit
+
+Detected Router with address: fe80:0000:0000:0000:0204:75ff:febe:e938
+                    lifetime: 10800
+                 curhoplimit: 64
+                  and prefix: 2001:660:4501:3202/64
+Spoofing very low TTL (1) Router Advertisments for the detected router...
+(Press Strg+C to stop.)
+    Spoofed very low TTL (1) Router Advertisment.
+@endcode
+
+NDPMon complained about several params of this router not matching those learned during learning phase:
+
+@code
+----- ND_ROUTER_ADVERT -----
+Reset timer for 0:4:75:be:e9:38 fe80:0:0:0:204:75ff:febe:e938
+Warning: wrong RA param: curhoplimit 1 
+Sending mail alert ...
+Warning: wrong RA param: reachable_timer 16384000 
+Sending mail alert ...
+Warning: wrong RA param: retrans_timer 1966080 
+Sending mail alert ...
+[counter-measures]: Sent propagate params router advertisement for wrong params.
+------------------
+
+---- ICMP packet ----
+[counter-measures]: Packet dropped as it is a NDPMon counter measure.
+------------------
+@endcode
+
+This is the attacker's RA with the faked parameters and the counter measure RA:
+
+@code
+09:20:17.676478 IP6 (hlim 255, next-header ICMPv6 (58) payload length: 64)
+  fe80::204:75ff:febe:e938 > ip6-allnodes: [icmp6 sum ok] ICMP6, router advertisement, length 64
+	hop limit 1, Flags [none], pref medium, router lifetime 10800s, reachable time 16384000s, retrans time 1966080s
+	  mtu option (5), length 8 (1):  1280
+	  prefix info option (3), length 32 (4): 2001:660:4501:3202::/64, Flags [none], valid time 10800s, pref. time 10800s
+	  source link-address option (1), length 8 (1): 00:04:75:be:e9:38
+09:20:17.678610 IP6 (hlim 255, next-header ICMPv6 (58) payload length: 16)
+  fe80::204:75ff:febe:e938 > ip6-allnodes: [icmp6 sum ok] ICMP6, router advertisement, length 16
+	hop limit 64, Flags [none], pref medium, router lifetime 10800s, reachable time 0s, retrans time 0s
+@endcode
+
+The counter measures succeeds in keeping the wrong paramater out of the routing tables.
+
+@page cm_propagate_neighbor_mac Counter Measure cm_propagate_neighbor_mac
+
+@section cm_propagate_neighbor_mac_description Description
+
+If NDPMon notes a changed ethernet address or a flip flop between two ethernet addresses, we assume the address seen first
+to be right.
+
+This counter measure sends a neighbor advertisement giving the right mac in order to set the neighbor cache
+entry of the victim at all hosts to STALE, re-initiating Neighbor Unreachability Detection.
+
+See also cm_propagate_neighbor_mac().
+
+@section cm_propagate_neighbor_mac_test Test
+
+The following faked advertisement was created by a thc-ipv6 tool:
+
+@code
+./fake_advertise6 eth0 fe80::212:3fff:fe77:74ad fe80::20c:f1ff:fe82:4a10 00:12:3f:77:74:a0
+@endcode
+
+NDPMon noted that the ethernet address of shikamaru had changed:
+
+@code
+----- ND_NEIGHBOR_ADVERT -----
+Warning: changed ethernet address 0:12:3f:77:74:ad to 0:12:3f:77:74:a0 fe80:0:0:0:212:3fff:fe77:74ad 
+Sending mail alert ...
+[counter-measures]: Sent neighbor advertisement propagating 0:12:3f:77:74:ad.
+------------------
+
+---- ICMP packet ----
+[counter-measures]: Packet dropped as it is a NDPMon counter measure.
+------------------
+@endcode
+
+@c tcpdump captured the faked NA as well as the counter measure.
+
+@code
+16:49:33.564476 IP6 (hlim 255, next-header ICMPv6 (58) payload length: 32)
+  fe80::212:3fff:fe77:74ad > fe80::20c:f1ff:fe82:4a10:
+  [icmp6 sum ok] ICMP6, neighbor advertisement, length 32,
+  tgt is fe80::212:3fff:fe77:74ad, Flags [override]
+	  destination link-address option (2), length 8 (1): 00:12:3f:77:74:a0
+16:49:35.251855 IP6 (hlim 255, next-header ICMPv6 (58) payload length: 32)
+  fe80::212:3fff:fe77:74ad > ip6-allnodes:
+  [icmp6 sum ok] ICMP6, neighbor advertisement, length 32,
+  tgt is fe80::212:3fff:fe77:74ad, Flags [override]
+	  destination link-address option (2), length 8 (1): 00:12:3f:77:74:ad
+@endcode
+
+We may not see a result of this counter measure in the routing tables, because as long as the host whose mac
+is to be faked responds to Neighbor Solicitations, the attack does not work.
+
+When the attack was performed with the thc-ipv6 tool @c parasite running, the counter measure kept all
+entries of the routing table in STALE state. At least the attacker won't be able to intercept any network traffic.
+
+
+*/

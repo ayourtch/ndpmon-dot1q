@@ -1,0 +1,27 @@
+/* This file contains additional documentation to be processed by doxygen.*/
+
+/**@page icmp_lib icmp_lib
+
+The icmp_lib provides the means to create and send ICMP Neighbor Discovery packets.
+
+Note that it uses the data structures of netinet/ip6.h and netinet/icmp6.h to improve readability
+of source code using the lib.
+
+At the moment, no IP extension headers are supported, but this is not necessary for ND packets
+(since no routing is performed).
+
+@section Examples
+
+These examples may be used to test NDPMon reactions to attacks. Currently only one example is implemented.
+
+@subsection example_fake_router
+
+This tool fakes a Router Advertisement according to its parameters and sends it once to the specified interface.
+
+The program is called using:
+
+@code
+example_fake_router interface routerip routermac curhoplimit router_lifetime prefix prefixlength
+@endcode
+
+*/

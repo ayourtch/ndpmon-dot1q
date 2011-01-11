@@ -1,0 +1,51 @@
+<!ELEMENT config_ndpmon (ignor_autoconf, syslog_facility, admin_mail, actions_low_pri, actions_high_pri, use_reverse_hostlookups, routers, countermeasures?)>
+
+<!ELEMENT ignor_autoconf (#PCDATA)>
+<!ELEMENT syslog_facility (#PCDATA)>
+<!ELEMENT admin_mail (#PCDATA)>
+
+<!ELEMENT actions_low_pri (sendmail, syslog, exec_pipe_program)>
+<!ELEMENT actions_high_pri (sendmail, syslog, exec_pipe_program)>
+<!ELEMENT sendmail (#PCDATA)>
+<!ELEMENT syslog (#PCDATA)>
+<!ELEMENT exec_pipe_program (#PCDATA)>
+
+<!ELEMENT use_reverse_hostlookups (#PCDATA)>
+<!ELEMENT routers (router*)>
+<!ELEMENT router (
+    mac, lla,
+    param_curhoplimit?,
+    param_flags_reserved?,
+    param_router_lifetime?,
+    param_reachable_timer?,
+    param_retrans_timer?,
+    param_mtu?,
+    params_volatile?,
+    prefixes,
+    addresses
+)>
+
+<!ELEMENT mac (#PCDATA)>
+<!ELEMENT lla (#PCDATA)>
+<!ELEMENT param_curhoplimit (#PCDATA)>
+<!ELEMENT param_flags_reserved (#PCDATA)>
+<!ELEMENT param_router_lifetime (#PCDATA)>
+<!ELEMENT param_reachable_timer (#PCDATA)>
+<!ELEMENT param_retrans_timer (#PCDATA)>
+<!ELEMENT param_mtu (#PCDATA)>
+<!ELEMENT params_volatile (#PCDATA)>
+
+<!ELEMENT prefixes (prefix*)>
+<!ELEMENT prefix (address, mask, param_flags_reserved?, param_valid_time?, param_preferred_time?)>
+<!ELEMENT mask (#PCDATA)>
+<!ELEMENT param_valid_time (#PCDATA)>
+<!ELEMENT param_preferred_time (#PCDATA)>
+
+<!ELEMENT addresses (address*)>
+<!ELEMENT address (#PCDATA)>
+
+<!ELEMENT countermeasures (kill_illegitimate_router?, kill_wrong_prefix?, propagate_router_params?, indicate_ndpmon_presence?)>
+<!ELEMENT kill_illegitimate_router (#PCDATA)>
+<!ELEMENT kill_wrong_prefix (#PCDATA)>
+<!ELEMENT propagate_router_params (#PCDATA)>
+<!ELEMENT indicate_ndpmon_presence (#PCDATA)>

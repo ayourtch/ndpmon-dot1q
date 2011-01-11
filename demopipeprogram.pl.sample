@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+
+my $i=0;
+open DATA, ">>/usr/local/ndpmon/test.txt" or die "Cannot open /usr/local/ndpmon/test.txt for writing\n";
+
+print DATA "-----\n";
+while (<STDIN>) {
+  chomp;
+  if ($_ ne "") {
+    $i++;
+    print DATA "$i: $_\n";
+#    print "$i: $_\n";
+  }
+}
+print DATA "-----\n\n";
+
+close DATA;

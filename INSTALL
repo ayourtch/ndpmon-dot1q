@@ -1,0 +1,44 @@
+1. Requirements
+----------------
+
+NDPMon is written in C, which is why you need a C compiler. During the 
+implementation, we used GCC version 4.1
+
+Besides the classic system libraries, other additional libraries are 
+required:
+    * libxml2
+    * libpcap
+
+Make sure you have these libraries and the associated headers installed.
+
+2. Installation
+----------------
+
+If you have troubles with the configure script, regenerate it with the 
+command:
+
+autoconf
+
+To compile and install NDPMon, simply use the command:
+
+./configure && make && make install
+
+To uninstall it, use:
+
+make uninstall
+
+Note that the install and uninstall targets require root privileges.
+
+3. Running NDPMon
+-----------------
+
+Before running NDPMon, make sure to edit the configuration file
+/usr/local/ndpmon/config_ndpmon.xml to adapt it to your network.
+
+To run NDPMon, use as root:
+
+/etc/init.d/ndpmon start
+
+To stop NDPMon, use as root:
+
+/etc/init.d/ndpmon stop

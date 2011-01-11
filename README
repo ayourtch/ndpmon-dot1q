@@ -1,0 +1,18 @@
+NDPMon, Neighbor Discovery Monitor, is a tool working with ICMPv6 packets.
+NDPMon observes the local network to see if nodes using neighbor discovery
+messages behave properly. When it detects a suspicious Neighbor Discovery
+message, it notifies the administrator by writing in the syslog and in 
+some cases by sending an email report.
+
+NDPMon is an equivalent of ArpWatch for IPv6 and was developped during the 
+summer 2006 by Thibault Cholez for the MADYNES Project from the LORIA - 
+INRIA Lorraine. It is currently maintained within the MADYNES Project by 
+Frederic Beck.
+
+For any question or bug report, please contact:
+
+    * Thibault Cholez - thibault.cholez@esial.uhp-nancy.fr
+    * Frederic Beck - frederic.beck@loria.fr
+    * Olivier Festor - olivier.festor@loria.fr
+    * Isabelle chrisment - isabelle.chrisment@loria.fr
+

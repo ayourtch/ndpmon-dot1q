@@ -1,0 +1,19 @@
+<!ELEMENT config_neighbor_list (neighbor_list)>
+<!ELEMENT neighbor_list (neighbor*)>
+
+<!ELEMENT neighbor (mac, lla, time,addresses, old_mac?)>
+
+<!ELEMENT mac (#PCDATA)>
+<!ATTLIST mac vendor CDATA #IMPLIED>
+<!ELEMENT lla (#PCDATA)>
+<!ELEMENT time (#PCDATA)>
+<!ATTLIST time timestr CDATA #IMPLIED>
+
+<!ELEMENT addresses (address*)>
+<!ELEMENT address (#PCDATA)>
+<!ATTLIST address firstseen CDATA #IMPLIED>
+<!ATTLIST address firstseenstr CDATA #IMPLIED>
+<!ATTLIST address lastseen CDATA #IMPLIED>
+<!ATTLIST address lastseenstr CDATA #IMPLIED>
+
+<!ELEMENT old_mac (mac*)>

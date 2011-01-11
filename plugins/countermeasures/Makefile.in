@@ -1,0 +1,17 @@
+FLAGS=-c -Wall -pedantic -I../.. @CFLAGS@ @OPTIONS@
+CC=@CC@
+
+all: countermeasures.o icmp_lib.o icmp_lib_nd.o
+
+clean: 
+	-rm -rf *~ *.o 
+
+countermeasures.o:	countermeasures.c
+	$(CC) $(FLAGS) countermeasures.c -o countermeasures.o
+
+icmp_lib.o: 
+	$(CC) $(FLAGS) -c icmp_lib.c -o icmp_lib.o
+
+icmp_lib_nd.o:
+	$(CC) $(FLAGS) -c icmp_lib_nd.c -o icmp_lib_nd.o
+

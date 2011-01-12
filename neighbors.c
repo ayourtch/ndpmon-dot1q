@@ -402,7 +402,7 @@ int reset_neighbor_timer(neighbor_list_t **list, uint16_t vlan_id, struct ether_
 			if(difftime(current, tmp->timer) > 6*30*DAY_TIME)
 			{
 				ipv6_ntoa(str_ip, tmp->lla);
-				snprintf (buffer, NOTIFY_BUFFER_SIZE, "new activity from: %s %s", ether_ntoa((struct ether_addr*)(&(tmp->mac))),str_ip);
+				snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: new activity from: %s %s", vlan_id, ether_ntoa((struct ether_addr*)(&(tmp->mac))),str_ip);
 				notify(1,buffer,"new activity",&eth,str_ip,NULL); 
 			}
 
@@ -699,7 +699,7 @@ int new_station(neighbor_list_t **list, uint16_t vlan_id, struct ether_addr eth,
 		if( !strncmp(vendor, "unknown", MANUFACTURER_NAME_SIZE) )
 		{
 			/* the MAC address is not from a known vendor, may be a forged address */
-			snprintf (buffer, NOTIFY_BUFFER_SIZE, "unkown mac vendor %s %s", ether_ntoa(&eth),str_ip);
+			snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: unknown mac vendor %s %s", vlan_id, ether_ntoa(&eth),str_ip);
 			notify(1, buffer, "unkown mac vendor", &eth, str_ip, NULL);
 			ret = 1;
 		}
@@ -720,7 +720,7 @@ int new_station(neighbor_list_t **list, uint16_t vlan_id, struct ether_addr eth,
 		else if( !IN6_IS_ADDR_MULTICAST(&addr) ) 
 			add_neighbor_ip(list, vlan_id, eth, addr);
 
-		snprintf(buffer, NOTIFY_BUFFER_SIZE, "new station VLAN%d %s %s", vlan_id, ether_ntoa(&eth),str_ip);
+		snprintf(buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: new station %s %s", vlan_id, ether_ntoa(&eth),str_ip);
 		notify(1, buffer, "new station",&eth,str_ip,NULL);
 		ret = 1;
 	}
@@ -730,7 +730,7 @@ int new_station(neighbor_list_t **list, uint16_t vlan_id, struct ether_addr eth,
 		set_neighbor_lla(list, vlan_id, eth, addr);
 		/* reset timer for host */
 		reset_neighbor_timer(list, vlan_id, eth);
-		snprintf (buffer, NOTIFY_BUFFER_SIZE, "new lla %s %s\n", ether_ntoa(&eth),str_ip);
+		snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: new lla %s %s\n", vlan_id, ether_ntoa(&eth),str_ip);
 		notify(1,buffer,"new lla",&eth,str_ip,NULL);
 		ret = 1;
 	}
@@ -741,7 +741,7 @@ int new_station(neighbor_list_t **list, uint16_t vlan_id, struct ether_addr eth,
 			add_neighbor_ip(list, vlan_id, eth, addr);
 		/* reset timer for host */
 		reset_neighbor_timer(list, vlan_id, eth);
-		snprintf (buffer, NOTIFY_BUFFER_SIZE, "new IP %s %s\n", ether_ntoa(&eth),str_ip);
+		snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: new IP %s %s\n", vlan_id, ether_ntoa(&eth),str_ip);
 		notify(1,buffer,"new IP",&eth,str_ip,NULL);
 		ret = 1;
 	}
@@ -789,14 +789,14 @@ int new_station(neighbor_list_t **list, uint16_t vlan_id, struct ether_addr eth,
 
 			if(!MEMCMP(&eth,&previous_mac, sizeof(struct ether_addr)))
 			{
-				snprintf (buffer, NOTIFY_BUFFER_SIZE, "flip flop between %s and %s for %s", temp, ether_ntoa(&eth), str_ip);
+				snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: flip flop between %s and %s for %s", vlan_id, temp, ether_ntoa(&eth), str_ip);
 				if(DEBUG)
 					fprintf (stderr, "flip flop between %s and %s for %s\n", temp, ether_ntoa(&eth), str_ip);
 				notify(2,buffer,"flip flop",&eth,str_ip,&previous_mac); 
 			}
 			else
 			{
-				sprintf (buffer, "reused old ethernet address %s instead of %s for %s", ether_ntoa(&eth), temp, str_ip);
+				sprintf (buffer, "VLAN%d: reused old ethernet address %s instead of %s for %s", vlan_id, ether_ntoa(&eth), temp, str_ip);
 				if(DEBUG)
 					fprintf (stderr, "reused old ethernet address %s instead of %s for %s\n", ether_ntoa(&eth), temp, str_ip);
 				notify(2,buffer,"reused old ethernet address",&eth,str_ip,&previous_mac); 
@@ -815,7 +815,7 @@ int new_station(neighbor_list_t **list, uint16_t vlan_id, struct ether_addr eth,
 			tmp = get_neighbor_by_lla(*list,vlan_id,lla);
 			snprintf(temp, MAC_STR_SIZE, "%s", ether_ntoa(&(tmp->mac)));
 			neighbor_update_mac(list, vlan_id, lla, eth);
-			snprintf (buffer, NOTIFY_BUFFER_SIZE, "changed ethernet address %s to %s %s", temp, ether_ntoa(&eth),str_ip);
+			snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: changed ethernet address %s to %s %s", vlan_id, temp, ether_ntoa(&eth),str_ip);
 				if(DEBUG)
 					fprintf (stderr, "changed ethernet address %s to %s %s\n", temp, ether_ntoa(&eth),str_ip);
 			notify(2,buffer,"changed ethernet address",&eth,str_ip,&(tmp->mac)); 

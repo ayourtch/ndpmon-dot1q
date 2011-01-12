@@ -317,11 +317,11 @@ void callback(u_char *args,const struct pcap_pkthdr* hdr,const u_char*
 			if(general_tests)
 			{
 				/*General verifications*/
-				watch_eth_mismatch(message, packet, eptr, ipptr, icmpptr, hdr->len);
-				watch_eth_broadcast(message, eptr, ipptr);
-				watch_ip_broadcast(message, eptr, ipptr);
-				watch_bogon(message, eptr, ipptr);
-				watch_hop_limit(message, eptr, ipptr);
+				watch_eth_mismatch(message, packet, vlan_id, eptr, ipptr, icmpptr, hdr->len);
+				watch_eth_broadcast(message, vlan_id, eptr, ipptr);
+				watch_ip_broadcast(message, vlan_id, eptr, ipptr);
+				watch_bogon(message, vlan_id, eptr, ipptr);
+				watch_hop_limit(message, vlan_id, eptr, ipptr);
 			}
 		}
 		else 

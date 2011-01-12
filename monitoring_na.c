@@ -63,7 +63,7 @@ int watch_R_flag(char* message, uint16_t vlan_id, struct ether_header* eptr, str
 
 		if(!found_mac)
 		{
-			snprintf (message, NOTIFY_BUFFER_SIZE, "NA router flag %s %s", mac_address, ip_address);
+			snprintf (message, NOTIFY_BUFFER_SIZE, "VLAN%d: NA router flag %s %s", vlan_id, mac_address, ip_address);
 			notify(2,message, "NA router flag", (struct ether_addr*) (eptr->ether_shost), ip_address, NULL);
 			return 2;
 		}
@@ -75,7 +75,7 @@ int watch_R_flag(char* message, uint16_t vlan_id, struct ether_header* eptr, str
 
 				if( !found_ip)
 				{
-					snprintf (message, NOTIFY_BUFFER_SIZE, "NA router flag %s %s", mac_address, ip_address);
+					snprintf (message, NOTIFY_BUFFER_SIZE, "VLAN%d: NA router flag %s %s", vlan_id, mac_address, ip_address);
 					notify(2,message, "NA router flag", (struct ether_addr*) (eptr->ether_shost), ip_address, NULL);
 					return 2;
 				}
@@ -148,7 +148,7 @@ int watch_dad_dos(char* message, uint16_t vlan_id, struct ether_header* eptr, st
 		{
 			char ip_address[40];
 			ipv6_ntoa(ip_address, ipptr->ip6_src);
-			snprintf (message, NOTIFY_BUFFER_SIZE, "dad dos %s %s", (char*)ether_ntoa((struct ether_addr*) (eptr->ether_shost)), ip_address);
+			snprintf (message, NOTIFY_BUFFER_SIZE, "VLAN%d: dad dos %s %s", vlan_id, (char*)ether_ntoa((struct ether_addr*) (eptr->ether_shost)), ip_address);
 			notify(2,message, "dad dos", (struct ether_addr*) (eptr->ether_shost), ip_address, NULL);
 			return 2;
 		}

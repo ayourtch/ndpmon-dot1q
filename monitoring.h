@@ -67,21 +67,21 @@ Olivier Festor, Scientific Leader of the MADYNEs Project, 20 August 2006
 
 /*Look for mismatch between the source link layer addr and the one anounced
  *in the icmp option*/
-int watch_eth_mismatch(char* buffer,  const u_char* packet, struct ether_header* eptr, struct ip6_hdr* ipptr, struct icmp6_hdr* icmpptr, int packet_len);
+int watch_eth_mismatch(char* buffer,  const u_char* packet, uint16_t vlan_id, struct ether_header* eptr, struct ip6_hdr* ipptr, struct icmp6_hdr* icmpptr, int packet_len);
 
 
 /*Look if the source mac address is a broadcast addr or is all zeros*/
-int watch_eth_broadcast(char* buffer, struct ether_header* eptr, struct ip6_hdr* ipptr);
+int watch_eth_broadcast(char* buffer, uint16_t vlan_id, struct ether_header* eptr, struct ip6_hdr* ipptr);
 
 
 /*Look if the source ip address is a broadcast addr*/
-int watch_ip_broadcast(char* buffer, struct ether_header* eptr, struct ip6_hdr* ipptr);
+int watch_ip_broadcast(char* buffer, uint16_t vlan_id, struct ether_header* eptr, struct ip6_hdr* ipptr);
 
 
 /*Look if the source ip address is local to the subnet*/
-int watch_bogon(char* buffer, struct ether_header* eptr, struct ip6_hdr* ipptr);
+int watch_bogon(char* buffer, uint16_t vlan_id, struct ether_header* eptr, struct ip6_hdr* ipptr);
 
 /* Look if the hop limit is set to 255 */
-int watch_hop_limit(char* buffer, struct ether_header* eptr, struct ip6_hdr* ipptr);
+int watch_hop_limit(char* buffer, uint16_t vlan_id, struct ether_header* eptr, struct ip6_hdr* ipptr);
 
 #endif

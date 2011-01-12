@@ -55,7 +55,7 @@ int watch_ra_ip(char* buffer, struct ether_header* eptr, struct ip6_hdr* ipptr)
 			
         /* REM
 		ipv6_ntoa(ip_address, ipptr->ip6_src);
-		snprintf (buffer, NOTIFY_BUFFER_SIZE, "wrong router ip %s %s", ether_ntoa((struct ether_addr*) (eptr->ether_shost)), ip_address);
+		snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: wrong router ip %s %s", vlan_id, ether_ntoa((struct ether_addr*) (eptr->ether_shost)), ip_address);
 		notify(2, buffer, "wrong router ip", (struct ether_addr*) (eptr->ether_shost), ip_address, NULL);
 		return 2;
 		END REM*/
@@ -66,7 +66,7 @@ int watch_ra_ip(char* buffer, struct ether_header* eptr, struct ip6_hdr* ipptr)
 	/* if no such router is found*/
 	
     ipv6_ntoa(ip_address, ipptr->ip6_src);
-    snprintf (buffer, NOTIFY_BUFFER_SIZE, "wrong router ip %s %s", ether_ntoa((struct ether_addr*) (eptr->ether_shost)), ip_address);
+    snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: wrong router ip %s %s", vlan_id, ether_ntoa((struct ether_addr*) (eptr->ether_shost)), ip_address);
     notify(2, buffer, "wrong router ip", (struct ether_addr*) (eptr->ether_shost), ip_address, NULL);
     return 2;
 	
@@ -93,7 +93,7 @@ int watch_ra_mac(char* buffer, struct ether_header* eptr, struct ip6_hdr* ipptr)
 
         /*REM
 		ipv6_ntoa(ip_address, ipptr->ip6_src);
-		snprintf (buffer, NOTIFY_BUFFER_SIZE, "wrong router mac %s %s", mac_address, ip_address);
+		snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: wrong router mac %s %s", vlan_id, mac_address, ip_address);
 		notify(2, buffer, "wrong router mac", (struct ether_addr*) (eptr->ether_shost), ip_address, NULL);
 		return 2;
 		END REM*/
@@ -104,7 +104,7 @@ int watch_ra_mac(char* buffer, struct ether_header* eptr, struct ip6_hdr* ipptr)
 	/* if no such router is found */
 	
 	ipv6_ntoa(ip_address, ipptr->ip6_src);
-	snprintf (buffer, NOTIFY_BUFFER_SIZE, "wrong router mac %s %s", mac_address, ip_address);
+	snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: wrong router mac %s %s", vlan_id, mac_address, ip_address);
 	notify(2, buffer, "wrong router mac", (struct ether_addr*) (eptr->ether_shost), ip_address, NULL);
 	return 2;	
 }
@@ -146,7 +146,7 @@ int watch_ra_prefix(char* buffer,  const u_char* packet, struct ether_header* ep
 			{
 				char ip_address[IP6_STR_SIZE];
 				ipv6_ntoa(ip_address, ipptr->ip6_src);
-				snprintf (buffer, NOTIFY_BUFFER_SIZE, "wrong prefix %s %s %s", prefix,(char*)ether_ntoa((struct ether_addr*) (eptr->ether_shost)), ip_address);
+				snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: wrong prefix %s %s %s", vlan_id, prefix,(char*)ether_ntoa((struct ether_addr*) (eptr->ether_shost)), ip_address);
 				notify(2, buffer, "wrong prefix", (struct ether_addr*) (eptr->ether_shost), ip_address, NULL);
 				return 2;
 			}
@@ -278,28 +278,28 @@ int watch_ra(char* buffer, uint16_t vlan_id, const u_char* packet, struct ether_
 		if( found_mac && found_lla)
 		{
 			/* valid MAC and IP, but not together */
-			snprintf (buffer, NOTIFY_BUFFER_SIZE, "wrong couple IP/MAC %s %s in RA", (char*)ether_ntoa(src_eth), ip_address);
+			snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: wrong couple IP/MAC %s %s in RA", vlan_id, (char*)ether_ntoa(src_eth), ip_address);
 			notify(2, buffer, "wrong couple IP/MAC", src_eth, ip_address, NULL);
 			ret = 2;
 		}
 		else if( found_mac && !found_lla)
 		{
 			/* wrong IP */
-			snprintf (buffer, NOTIFY_BUFFER_SIZE, "wrong router ip %s %s", (char*)ether_ntoa(src_eth), ip_address);
+			snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: wrong router ip %s %s", vlan_id, (char*)ether_ntoa(src_eth), ip_address);
 			notify(2, buffer, "wrong router ip", src_eth, ip_address, NULL);
 			ret = 2;
 		}
 		else if( !found_mac && found_lla)
 		{
 			/* wrong MAC */
-			snprintf (buffer, NOTIFY_BUFFER_SIZE, "wrong router mac %s %s", (char*)ether_ntoa(src_eth), ip_address);
+			snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: wrong router mac %s %s", vlan_id, (char*)ether_ntoa(src_eth), ip_address);
 			notify(2, buffer, "wrong router mac", src_eth, ip_address, NULL);
 			ret = 2;
 		}
 		else
 		{
 			/* wrong ipv6 router: both mac and lla are fantasist */
-			snprintf (buffer, NOTIFY_BUFFER_SIZE, "wrong ipv6 router %s %s", (char*)ether_ntoa(src_eth), ip_address);
+			snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: wrong ipv6 router %s %s", vlan_id, (char*)ether_ntoa(src_eth), ip_address);
 			notify(2, buffer, "wrong ipv6 router", src_eth, ip_address, NULL);
 			ret = 2;
 #ifdef _COUNTERMEASURES_
@@ -341,7 +341,7 @@ int watch_ra(char* buffer, uint16_t vlan_id, const u_char* packet, struct ether_
 		{
 			char ip_address[IP6_STR_SIZE];
 			ipv6_ntoa(ip_address, ipptr->ip6_src);
-			snprintf (buffer, NOTIFY_BUFFER_SIZE, "wrong RA flags: M=1 and O=0");
+			snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: wrong RA flags: M=1 and O=0", vlan_id);
 			notify(2, buffer, "wrong RA flags", (struct ether_addr*) (eptr->ether_shost), ip_address, NULL);
 			ret = 2;
 		}
@@ -391,7 +391,7 @@ int watch_ra(char* buffer, uint16_t vlan_id, const u_char* packet, struct ether_
 				param_mismatch++;
 			}
 			if (param_mismatch>0) { /* we might tune the level of reaction here */
-				snprintf (buffer, NOTIFY_BUFFER_SIZE, "wrong RA params: %s", param_mismatched_list);
+				snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: wrong RA params: %s", vlan_id, param_mismatched_list);
 				notify(2, buffer, "wrong RA params", (struct ether_addr*) (eptr->ether_shost), ip_address, NULL);
 #ifdef _COUNTERMEASURES_
 				param_spoofing_detected = 1;
@@ -423,7 +423,7 @@ int watch_ra(char* buffer, uint16_t vlan_id, const u_char* packet, struct ether_
 				{
 					char ip_address[IP6_STR_SIZE];
 					ipv6_ntoa(ip_address, ipptr->ip6_src);
-					snprintf (buffer, NOTIFY_BUFFER_SIZE, "wrong prefix %s %s %s", prefix,(char*)ether_ntoa((struct ether_addr*) (eptr->ether_shost)), ip_address);
+					snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: wrong prefix %s %s %s", vlan_id, prefix,(char*)ether_ntoa((struct ether_addr*) (eptr->ether_shost)), ip_address);
 					notify(2, buffer, "wrong prefix", (struct ether_addr*) (eptr->ether_shost), ip_address, NULL);
 					ret = 2;
 #ifdef _COUNTERMEASURES_
@@ -436,7 +436,7 @@ int watch_ra(char* buffer, uint16_t vlan_id, const u_char* packet, struct ether_
 				{
 					char ip_address[IP6_STR_SIZE];
 					ipv6_ntoa(ip_address, ipptr->ip6_src);
-					snprintf (buffer, NOTIFY_BUFFER_SIZE, "RA preferred lifetime %d longer than valid lifetime %d",prefix_valid_time, prefix_preferred_time );
+					snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: RA preferred lifetime %d longer than valid lifetime %d",vlan_id, prefix_valid_time, prefix_preferred_time );
 					notify(2, buffer, "wrong RA prefix option lifetimes", (struct ether_addr*) (eptr->ether_shost), ip_address, NULL);
 					ret = 2;
 				}
@@ -445,7 +445,7 @@ int watch_ra(char* buffer, uint16_t vlan_id, const u_char* packet, struct ether_
 				{
 					char ip_address[IP6_STR_SIZE];
 					ipv6_ntoa(ip_address, ipptr->ip6_src);
-					snprintf (buffer, NOTIFY_BUFFER_SIZE, "RA prefix option valid lifetime %d < 2 hours", prefix_valid_time );
+					snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: RA prefix option valid lifetime %d < 2 hours", vlan_id, prefix_valid_time );
 					notify(2, buffer, "RA prefix option valid lifetime too short", (struct ether_addr*) (eptr->ether_shost), ip_address, NULL);
 					ret = 2;
 				}
@@ -472,7 +472,7 @@ int watch_ra(char* buffer, uint16_t vlan_id, const u_char* packet, struct ether_
 						param_mismatch++;
 					}
 					if (param_mismatch>0) {
-						snprintf (buffer, NOTIFY_BUFFER_SIZE, "wrong RA prefix option params: %s", param_mismatched_list);
+						snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: wrong RA prefix option params: %s", vlan_id, param_mismatched_list);
 						notify(2, buffer, "wrong RA prefix option params", (struct ether_addr*) (eptr->ether_shost), ip_address, NULL);
 #ifdef _COUNTERMEASURES_
 						param_spoofing_detected = 1;
@@ -494,7 +494,7 @@ int watch_ra(char* buffer, uint16_t vlan_id, const u_char* packet, struct ether_
 
 					adv_eth = (struct ether_addr *) mac;
 					strncpy(eth_opt,ether_ntoa(adv_eth), ETH_ADDRSTRLEN);
-					snprintf (buffer, NOTIFY_BUFFER_SIZE, "source link address %s different from ethernet source %s", eth_opt, eth );
+					snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: source link address %s different from ethernet source %s", vlan_id, eth_opt, eth );
 					notify(2, buffer, "wrong source link address option", (struct ether_addr*) (eptr->ether_shost), ip_address, NULL);
 					ret = 2;
 				}
@@ -506,7 +506,7 @@ int watch_ra(char* buffer, uint16_t vlan_id, const u_char* packet, struct ether_
 				struct nd_opt_mtu *option_mtu = (struct nd_opt_mtu*) optptr;
 				mtu = ntohl(option_mtu->nd_opt_mtu_mtu);
 				if (router != NULL && router->params_volatile==0 && router->param_mtu!=0 && mtu != router->param_mtu) {
-					snprintf (buffer, NOTIFY_BUFFER_SIZE, "wrong RA mtu option: mtu=%u", mtu);
+					snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: wrong RA mtu option: mtu=%u", vlan_id, mtu);
 					notify(2, buffer, "wrong RA mtu option", (struct ether_addr*) (eptr->ether_shost), ip_address, NULL);
 #ifdef _COUNTERMEASURES_
 					param_spoofing_detected=1;

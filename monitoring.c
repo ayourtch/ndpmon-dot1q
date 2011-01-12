@@ -36,7 +36,7 @@ Olivier Festor, Scientific Leader of the MADYNEs Project, 20 August 2006
 
 /*Look for mismatch between the source link layer addr and the one anounced
  *in the icmp option*/
-int watch_eth_mismatch(char* buffer,  const u_char* packet, struct ether_header* eptr, struct ip6_hdr* ipptr, struct icmp6_hdr* icmpptr, int packet_len)
+int watch_eth_mismatch(char* buffer,  const u_char* packet, uint16_t vlan_id, struct ether_header* eptr, struct ip6_hdr* ipptr, struct icmp6_hdr* icmpptr, int packet_len)
 {
 	int jump=0;
 	uint8_t  opt_type;
@@ -93,7 +93,7 @@ int watch_eth_mismatch(char* buffer,  const u_char* packet, struct ether_header*
 			{
 				char eth1[MAC_STR_SIZE];
 				strncpy( eth1, ether_ntoa(addr1), MAC_STR_SIZE); 
-				snprintf (buffer, NOTIFY_BUFFER_SIZE, "ethernet mismatch %s %s %s", ether_ntoa(addr2),eth1, str_ip);
+				snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: ethernet mismatch %s %s %s", vlan_id, ether_ntoa(addr2),eth1, str_ip);
 				notify(1, buffer, "ethernet mismatch", addr1, str_ip, addr2);
 				return 1;
 			}
@@ -116,7 +116,7 @@ int watch_eth_mismatch(char* buffer,  const u_char* packet, struct ether_header*
 
 
 /*Look if the source mac address is a broadcast addr or is all zeros*/
-int watch_eth_broadcast(char* buffer, struct ether_header* eptr, struct ip6_hdr* ipptr)
+int watch_eth_broadcast(char* buffer, uint16_t vlan_id, struct ether_header* eptr, struct ip6_hdr* ipptr)
 {
 	struct ether_addr* eth_addr = (struct ether_addr*) eptr->ether_shost;
 	struct ether_addr* test = malloc(sizeof(struct ether_addr));
@@ -143,7 +143,7 @@ int watch_eth_broadcast(char* buffer, struct ether_header* eptr, struct ip6_hdr*
 	if(broad)
 	{
 		ipv6_ntoa(str_ip, ipptr->ip6_src);
-		snprintf (buffer, NOTIFY_BUFFER_SIZE,  "ethernet broadcast %s %s",ether_ntoa(eth_addr), str_ip);
+		snprintf (buffer, NOTIFY_BUFFER_SIZE,  "VLAN%d: ethernet broadcast %s %s",vlan_id,ether_ntoa(eth_addr), str_ip);
 		free(test);
 		notify(1, buffer, "ethernet broadcast", eth_addr, str_ip, NULL);
 		return 1;
@@ -156,7 +156,7 @@ int watch_eth_broadcast(char* buffer, struct ether_header* eptr, struct ip6_hdr*
 
 
 /*Look if the source ip address is a broadcast addr*/
-int watch_ip_broadcast(char* buffer, struct ether_header* eptr, struct ip6_hdr* ipptr)
+int watch_ip_broadcast(char* buffer, uint16_t vlan_id, struct ether_header* eptr, struct ip6_hdr* ipptr)
 {
 	struct ether_addr* eth_addr = (struct ether_addr*) eptr->ether_shost;
 	struct in6_addr* ip_addr = &ipptr->ip6_src;
@@ -167,7 +167,7 @@ int watch_ip_broadcast(char* buffer, struct ether_header* eptr, struct ip6_hdr* 
 	if (IN6_IS_ADDR_MULTICAST(ip_addr))
 	{
 
-		snprintf (buffer, NOTIFY_BUFFER_SIZE, "ip multicast %s %s",ether_ntoa(eth_addr),str_ip);
+		snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: ip multicast %s %s",vlan_id,ether_ntoa(eth_addr),str_ip);
 		notify(1, buffer, "ip multicast", eth_addr, str_ip, NULL);
 		return 1;
 
@@ -178,7 +178,7 @@ int watch_ip_broadcast(char* buffer, struct ether_header* eptr, struct ip6_hdr* 
 
 
 /*Look if the source ip address is local to the subnet*/
-int watch_bogon(char* buffer, struct ether_header* eptr, struct ip6_hdr* ipptr)
+int watch_bogon(char* buffer, uint16_t vlan_id, struct ether_header* eptr, struct ip6_hdr* ipptr)
 {
 
 	struct ether_addr* eth_addr = (struct ether_addr*) eptr->ether_shost;
@@ -205,7 +205,7 @@ int watch_bogon(char* buffer, struct ether_header* eptr, struct ip6_hdr* ipptr)
 
 	if (!find && !IN6_IS_ADDR_UNSPECIFIED(ip_addr)&&!IN6_IS_ADDR_LINKLOCAL(ip_addr)&&!IN6_IS_ADDR_MULTICAST(ip_addr)&&!IN6_IS_ADDR_SITELOCAL(ip_addr))
 	{
-		snprintf (buffer, NOTIFY_BUFFER_SIZE, "bogon %s %s",ether_ntoa(eth_addr),str_ip);
+		snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: bogon %s %s",vlan_id,ether_ntoa(eth_addr),str_ip);
 		notify(1, buffer, "bogon", eth_addr, str_ip, NULL);
 		return 1;
 	}
@@ -215,7 +215,7 @@ int watch_bogon(char* buffer, struct ether_header* eptr, struct ip6_hdr* ipptr)
 
 
 /* Look if the hop limit is set to 255 */
-int watch_hop_limit(char* buffer, struct ether_header* eptr, struct ip6_hdr* ipptr)
+int watch_hop_limit(char* buffer, uint16_t vlan_id, struct ether_header* eptr, struct ip6_hdr* ipptr)
 {
 	struct ether_addr* eth_addr = (struct ether_addr*) eptr->ether_shost;
 	struct in6_addr* ip_addr = &ipptr->ip6_src;
@@ -228,7 +228,7 @@ int watch_hop_limit(char* buffer, struct ether_header* eptr, struct ip6_hdr* ipp
 
 	if(hlim != 255)
 	{
-		snprintf (buffer, NOTIFY_BUFFER_SIZE, "IPv6 Hop Limit %d", hlim);
+		snprintf (buffer, NOTIFY_BUFFER_SIZE, "VLAN%d: IPv6 Hop Limit %d", vlan_id, hlim);
 		notify(1, buffer, "wrong ipv6 hop limit", eth_addr, str_ip, NULL);
 		return 1;
 	}

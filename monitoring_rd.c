@@ -53,21 +53,21 @@ int watch_rd_src(char* message, uint16_t vlan_id, struct ether_header* eptr, str
 		if( found_mac && found_lla)
 		{
 			/* valid MAC and IP, but not together */
-			snprintf (message, NOTIFY_BUFFER_SIZE, "wrong couple IP/MAC %s %s in RD", (char*)ether_ntoa(src_eth), ip_address);
+			snprintf (message, NOTIFY_BUFFER_SIZE, "VLAN%d: wrong couple IP/MAC %s %s in RD", vlan_id, (char*)ether_ntoa(src_eth), ip_address);
 			notify(2, message, "wrong couple IP/MAC in RD", src_eth, ip_address, NULL);
 			ret = 2;
 		}
 		else if( found_mac && !found_lla)
 		{
 			/* wrong IP */
-			snprintf (message, NOTIFY_BUFFER_SIZE, "wrong router redirect ip %s %s", (char*)ether_ntoa(src_eth), ip_address);
+			snprintf (message, NOTIFY_BUFFER_SIZE, "VLAN%d: wrong router redirect ip %s %s", vlan_id, (char*)ether_ntoa(src_eth), ip_address);
 			notify(2, message, "wrong router redirect ip", src_eth, ip_address, NULL);
 			ret = 2;
 		}
 		else if( !found_mac && found_lla)
 		{
 			/* wrong MAC */
-			snprintf (message, NOTIFY_BUFFER_SIZE, "wrong router redirect mac %s %s", (char*)ether_ntoa(src_eth), ip_address);
+			snprintf (message, NOTIFY_BUFFER_SIZE, "VLAN%d: wrong router redirect mac %s %s", vlan_id, (char*)ether_ntoa(src_eth), ip_address);
 			notify(2, message, "wrong router redirect mac", src_eth, ip_address, NULL);
 			ret = 2;
 		}
@@ -98,7 +98,7 @@ int watch_rd_src(char* message, uint16_t vlan_id, struct ether_header* eptr, str
 
 	if(!ip_ok || !mac_ok)
 	{
-		snprintf (message, NOTIFY_BUFFER_SIZE, "wrong router redirect %s %s", mac_address, ip_address);
+		snprintf (message, NOTIFY_BUFFER_SIZE, "VLAN%d wrong router redirect %s %s", vlan_id, mac_address, ip_address);
 		notify(2, message, "wrong router redirect", (struct ether_addr*) (eptr->ether_shost), ip_address, NULL);
 		return 2;
 	}

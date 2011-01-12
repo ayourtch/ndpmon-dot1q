@@ -77,7 +77,7 @@ int is_ipv6_pkt(struct ether_header *eptr) {
 		vlan_ptr++;
 		vlan_ether_ptr = vlan_ptr + 1;
 		if(ntohs(*vlan_ether_ptr) == ETHERTYPE_IPV6) {
-			return ntohs(*vlan_ptr);
+			return (4095 & ntohs(*vlan_ptr));
 		}
 	}
 	return 0;
@@ -434,8 +434,8 @@ int main(int argc,char **argv)
 	FILE *dat = NULL; /* for the discovery stats */
 
 	interface = NULL;
-	//filter = "icmp6 or vlan and icmp6";
-	filter = "vlan and icmp6";
+	filter = "icmp6 or (vlan and icmp6)";
+	//filter = "vlan and icmp6";
 	nb_packet=0;/*all packets are captured until kill*/
 
 

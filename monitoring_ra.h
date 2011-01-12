@@ -87,6 +87,6 @@ int watch_ra_mac(char* buffer, struct ether_header* eptr,struct ip6_hdr* ipptr )
  */
 int watch_ra_prefix(char* buffer, const u_char* packet, struct ether_header* eptr, struct ip6_hdr* ipptr, int packet_len);
 
-int watch_ra(char* buffer, const u_char* packet, struct ether_header* eptr, struct ip6_hdr* ipptr, int packet_len);
+int watch_ra(char* buffer, uint16_t vlan_id, const u_char* packet, struct ether_header* eptr, struct ip6_hdr* ipptr, int packet_len);
 
 #endif

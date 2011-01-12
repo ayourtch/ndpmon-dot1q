@@ -163,7 +163,7 @@ int watch_ra_prefix(char* buffer,  const u_char* packet, struct ether_header* ep
 
 #endif
 
-int watch_ra(char* buffer,  const u_char* packet, struct ether_header* eptr, struct ip6_hdr* ipptr, int packet_len)
+int watch_ra(char* buffer, uint16_t vlan_id, const u_char* packet, struct ether_header* eptr, struct ip6_hdr* ipptr, int packet_len)
 {
 	router_list_t* router=NULL;
 	int ret = 0;
@@ -173,7 +173,7 @@ int watch_ra(char* buffer,  const u_char* packet, struct ether_header* eptr, str
 	src_eth = (struct ether_addr *) eptr->ether_shost;
 	ipv6_ntoa(ip_address, ipptr->ip6_src);
 	strncpy(eth,ether_ntoa(src_eth), ETH_ADDRSTRLEN);
-	router = router_get(routers, ipptr->ip6_src, *src_eth);
+	router = router_get(routers, vlan_id, ipptr->ip6_src, *src_eth);
 
 	/* Learning phase, just populate the routers list */
 	if(learning)
@@ -219,7 +219,7 @@ int watch_ra(char* buffer,  const u_char* packet, struct ether_header* eptr, str
 		if(router==NULL) /* router not seen before */
 		{
 			router_add(
-				&routers, src_eth, &ipptr->ip6_src,
+				&routers, vlan_id, src_eth, &ipptr->ip6_src,
 				router_advert->nd_ra_curhoplimit,
 				router_advert->nd_ra_flags_reserved,
 				ntohs(router_advert->nd_ra_router_lifetime),
@@ -229,7 +229,7 @@ int watch_ra(char* buffer,  const u_char* packet, struct ether_header* eptr, str
 				1 /* params are by default volatile (they may change).  */
 			);
 			router_add_prefix(
-				routers, ipptr->ip6_src, *src_eth,
+				routers, vlan_id, ipptr->ip6_src, *src_eth,
 				option_prefix->nd_opt_pi_prefix,
 				option_prefix->nd_opt_pi_prefix_len,
 				option_prefix->nd_opt_pi_flags_reserved,
@@ -248,11 +248,11 @@ int watch_ra(char* buffer,  const u_char* packet, struct ether_header* eptr, str
 			if (option_mtu!=NULL) {
 				router->param_mtu = ntohl(option_mtu->nd_opt_mtu_mtu);
 			}
-			router_prefix = router_get_prefix(routers, ipptr->ip6_src, *src_eth, option_prefix->nd_opt_pi_prefix, option_prefix->nd_opt_pi_prefix_len);
+			router_prefix = router_get_prefix(routers, vlan_id, ipptr->ip6_src, *src_eth, option_prefix->nd_opt_pi_prefix, option_prefix->nd_opt_pi_prefix_len);
 			if( router_prefix == NULL ) {
 	                        /* If there is a new prefix advertised add it to the list of prefixes.*/
 				router_add_prefix(
-					routers, ipptr->ip6_src, *src_eth,
+					routers, vlan_id, ipptr->ip6_src, *src_eth,
 					option_prefix->nd_opt_pi_prefix,
 					option_prefix->nd_opt_pi_prefix_len,
 					option_prefix->nd_opt_pi_flags_reserved,
@@ -272,8 +272,8 @@ int watch_ra(char* buffer,  const u_char* packet, struct ether_header* eptr, str
 	/* if the router is not known */
 	if(router==NULL)
 	{
-		int found_mac = is_router_mac_in(routers, *src_eth);
-		int found_lla = is_router_lla_in(routers, ipptr->ip6_src);
+		int found_mac = is_router_mac_in(routers, vlan_id, *src_eth);
+		int found_lla = is_router_lla_in(routers, vlan_id, ipptr->ip6_src);
 
 		if( found_mac && found_lla)
 		{
@@ -418,7 +418,7 @@ int watch_ra(char* buffer,  const u_char* packet, struct ether_header* eptr, str
 				prefix_preferred_time = ntohl(option_prefix->nd_opt_pi_preferred_time);
 				ipv6pre_ntoa(prefix, option_prefix->nd_opt_pi_prefix);
 				/* Check prefix */
-				router_prefix = router_get_prefix(routers, ipptr->ip6_src, *src_eth, option_prefix->nd_opt_pi_prefix, option_prefix->nd_opt_pi_prefix_len);
+				router_prefix = router_get_prefix(routers, vlan_id, ipptr->ip6_src, *src_eth, option_prefix->nd_opt_pi_prefix, option_prefix->nd_opt_pi_prefix_len);
 				if (router_prefix==NULL) /* prefix not found*/
 				{
 					char ip_address[IP6_STR_SIZE];

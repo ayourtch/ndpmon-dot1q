@@ -286,7 +286,7 @@ void parse_routers()
 			prefix_t* tmp_prefix = NULL;
 			address_t* tmp_address = NULL;
 			xmlNode *param = router->children;
-			int vlan_id;
+			int vlan_id = 4095;
 			while(param != NULL) {
 				if (param->type != XML_ELEMENT_NODE) {
 					param = param->next;
@@ -407,7 +407,7 @@ void parse_routers()
 			} /* end router params */
 			/* Add router to the router list: */
 			router_add(
-				&routers, &mac, &lla,
+				&routers, vlan_id, &mac, &lla,
 				param_curhoplimit,
 				param_flags_reserved,
 				param_router_lifetime,
@@ -419,7 +419,7 @@ void parse_routers()
 			while (tmp_prefix!=NULL) {
 				prefix_t* current=tmp_prefix;
 				router_add_prefix(
-					routers, lla, mac,
+					routers, vlan_id, lla, mac,
 					current->prefix,
 					current->mask,
 					current->param_flags_reserved,
@@ -431,7 +431,7 @@ void parse_routers()
 			}
 			while (tmp_address!=NULL) {
 				address_t* current=tmp_address;
-				router_add_address(routers, mac, current->address);
+				router_add_address(routers, vlan_id, mac, current->address);
 				tmp_address = current->next;
 				free(current);
 			}

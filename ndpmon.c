@@ -243,7 +243,7 @@ void callback(u_char *args,const struct pcap_pkthdr* hdr,const u_char*
 					}
 
 					new_station(&neighbors,vlan_id,*src_eth,ipptr->ip6_src, &new_eth);
-					watch_ra(message, packet, eptr, ipptr, hdr->len);
+					watch_ra(message, vlan_id, packet, eptr, ipptr, hdr->len);
 
 					general_tests = 1;
 					break;
@@ -276,7 +276,7 @@ void callback(u_char *args,const struct pcap_pkthdr* hdr,const u_char*
 
 					new_station(&neighbors,vlan_id,*src_eth,ipptr->ip6_src, &new_eth);
 					watch_dad_dos(message, vlan_id, eptr, ipptr, naptr, new_eth);
-					watch_R_flag(message, eptr, ipptr, naptr);
+					watch_R_flag(message, vlan_id, eptr, ipptr, naptr);
 
 					general_tests = 1;
 					break;
@@ -285,7 +285,7 @@ void callback(u_char *args,const struct pcap_pkthdr* hdr,const u_char*
 					rdptr = (struct nd_redirect*) (packet + ETHERNET_SIZE + dot1q_delta + IPV6_SIZE);
 					print_rd(*rdptr);
 
-					watch_rd_src(message, eptr, ipptr);
+					watch_rd_src(message, vlan_id, eptr, ipptr);
 					general_tests = 1;
 					break;
 #ifdef _COUNTERMEASURES_

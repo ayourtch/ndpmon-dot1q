@@ -6,7 +6,7 @@
 #include "alarm.h"
 #include "membounds.h"
 
-int in_vlan(neighbor_list_t *tmp, int vlan_id) {
+static int in_vlan(neighbor_list_t *tmp, int vlan_id) {
 	return ((vlan_id == 0) || 
 		(tmp->vlan_id == vlan_id));
 }

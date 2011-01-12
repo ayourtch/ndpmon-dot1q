@@ -37,18 +37,18 @@ Olivier Festor, Scientific Leader of the MADYNEs Project, 20 August 2006
 /*Test if the RD message comes from a router with IP6 and MAC address
  *specified in the configuration file
  */
-int watch_rd_src(char* message, struct ether_header* eptr, struct ip6_hdr* ipptr)
+int watch_rd_src(char* message, uint16_t vlan_id, struct ether_header* eptr, struct ip6_hdr* ipptr)
 {
 	char ip_address[40];
 	struct ether_addr *src_eth = (struct ether_addr *) eptr->ether_shost;
 	int ret = 0;
 
-	int found_router = router_has_router(routers, ipptr->ip6_src, *src_eth);
+	int found_router = router_has_router(routers, vlan_id, ipptr->ip6_src, *src_eth);
 
 	if(!found_router)
 	{
-		int found_mac = is_router_mac_in(routers, *src_eth);
-		int found_lla = is_router_lla_in(routers, ipptr->ip6_src);
+		int found_mac = is_router_mac_in(routers, vlan_id, *src_eth);
+		int found_lla = is_router_lla_in(routers, vlan_id, ipptr->ip6_src);
 
 		if( found_mac && found_lla)
 		{

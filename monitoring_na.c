@@ -38,7 +38,7 @@ Olivier Festor, Scientific Leader of the MADYNEs Project, 20 August 2006
 /*Test if the NA enable the router flag and if true
  *test if this neighbor is an official router
  */
-int watch_R_flag(char* message, struct ether_header* eptr, struct ip6_hdr* ipptr, struct nd_neighbor_advert* naptr)
+int watch_R_flag(char* message, uint16_t vlan_id, struct ether_header* eptr, struct ip6_hdr* ipptr, struct nd_neighbor_advert* naptr)
 {
 
 	/*Mask is used to select the R_FLAG from the NA*/
@@ -55,8 +55,8 @@ int watch_R_flag(char* message, struct ether_header* eptr, struct ip6_hdr* ipptr
 		char* mac_address = NULL;
 		struct ether_addr *src_eth = (struct ether_addr *)eptr->ether_shost;
 
-		int found_mac = is_router_mac_in(routers, *src_eth);
-		int found_lla = is_router_lla_in(routers, ipptr->ip6_src);
+		int found_mac = is_router_mac_in(routers, vlan_id, *src_eth);
+		int found_lla = is_router_lla_in(routers, vlan_id, ipptr->ip6_src);
 
 		mac_address= (char*)ether_ntoa((struct ether_addr*) (eptr->ether_shost));
 		ipv6_ntoa(ip_address, ipptr->ip6_src);
@@ -71,7 +71,7 @@ int watch_R_flag(char* message, struct ether_header* eptr, struct ip6_hdr* ipptr
 		{
 			if(!found_lla)
 			{
-				int found_ip = router_has_address(routers, *src_eth, ipptr->ip6_src);
+				int found_ip = router_has_address(routers, vlan_id, *src_eth, ipptr->ip6_src);
 
 				if( !found_ip)
 				{

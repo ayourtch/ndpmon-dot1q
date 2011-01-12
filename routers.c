@@ -1,12 +1,16 @@
 #include "routers.h"
 
-int is_router_lla_in(router_list_t *list, struct in6_addr lla)
+static int in_vlan( router_list_t *tmp, uint16_t vlan_id) {
+	return ((vlan_id == 0) || (vlan_id == tmp->vlan_id));
+}
+
+int is_router_lla_in(router_list_t *list, uint16_t vlan_id, struct in6_addr lla)
 {
 	router_list_t *tmp = list;
 
 	while(tmp != NULL)
 	{
-		if(IN6_ARE_ADDR_EQUAL(&lla,&(tmp->lla)))
+		if(in_vlan(tmp, vlan_id) && IN6_ARE_ADDR_EQUAL(&lla,&(tmp->lla)))
 			return 1;
 
 		tmp = tmp->next;
@@ -15,13 +19,13 @@ int is_router_lla_in(router_list_t *list, struct in6_addr lla)
 	return 0;
 }
 
-int is_router_mac_in(router_list_t *list, struct ether_addr eth)
+int is_router_mac_in(router_list_t *list, uint16_t vlan_id, struct ether_addr eth)
 {
 	router_list_t *tmp = list;
 
 	while(tmp != NULL)
 	{
-		if(!MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
+		if(in_vlan(tmp, vlan_id) && !MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
 			return 1;
 
 		tmp = tmp->next;
@@ -31,13 +35,13 @@ int is_router_mac_in(router_list_t *list, struct ether_addr eth)
 }
 
 
-router_list_t * router_get(router_list_t *list, struct in6_addr lla, struct ether_addr eth)
+router_list_t * router_get(router_list_t *list, uint16_t vlan_id, struct in6_addr lla, struct ether_addr eth)
 {
 	router_list_t *tmp = list;
 
 	while(tmp != NULL)
 	{
-		if(!MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
+		if(in_vlan(tmp, vlan_id) && !MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
 			if(IN6_ARE_ADDR_EQUAL(&lla,&(tmp->lla)))
 				return tmp;
 
@@ -47,20 +51,20 @@ router_list_t * router_get(router_list_t *list, struct in6_addr lla, struct ethe
 	return NULL;
 }
 
-int router_has_router(router_list_t *list, struct in6_addr lla, struct ether_addr eth) {
-	if (router_get(list, lla, eth)==NULL) {
+int router_has_router(router_list_t *list, uint16_t vlan_id, struct in6_addr lla, struct ether_addr eth) {
+	if (router_get(list, vlan_id, lla, eth)==NULL) {
 		return 0;
 	}
 	return 1;
 }
 
-int router_add(router_list_t **list, struct ether_addr* eth, struct in6_addr* lla,
+int router_add(router_list_t **list, uint16_t vlan_id, struct ether_addr* eth, struct in6_addr* lla,
 	uint8_t curhoplimit, uint8_t flags_reserved, uint16_t router_lifetime, uint32_t reachable_timer, uint32_t retrans_timer,
 	uint32_t mtu, int p_volatile)
 {
 	router_list_t *tmp = *list,*new=NULL;
 
-	if(router_has_router(*list,*lla,*eth))
+	if(router_has_router(*list,vlan_id,*lla,*eth))
 	{
 		fprintf(stderr,"Router already in list\n");
 		return 0;
@@ -73,6 +77,7 @@ int router_add(router_list_t **list, struct ether_addr* eth, struct in6_addr* ll
 	}
 
 	memcpy(&new->mac, eth, sizeof(struct ether_addr));
+	new->vlan_id = vlan_id;
 	memcpy(&new->lla, lla, sizeof(struct in6_addr));
 	new->param_curhoplimit     = curhoplimit;
 	new->param_flags_reserved  = flags_reserved;
@@ -97,7 +102,7 @@ int router_add(router_list_t **list, struct ether_addr* eth, struct in6_addr* ll
 	return 1;
 }
 
-int router_add_prefix(router_list_t *list, struct in6_addr lla, struct ether_addr eth, struct in6_addr prefix, int mask, 
+int router_add_prefix(router_list_t *list, uint16_t vlan_id, struct in6_addr lla, struct ether_addr eth, struct in6_addr prefix, int mask, 
 	uint8_t flags_reserved, uint32_t valid_lifetime, uint32_t preferred_lifetime)
 {
 	router_list_t *tmp = list;
@@ -116,7 +121,7 @@ int router_add_prefix(router_list_t *list, struct in6_addr lla, struct ether_add
 	new->param_preferred_time = preferred_lifetime;
 	new->next=NULL;
 
-	tmp = router_get(list,  lla, eth);
+	tmp = router_get(list,  vlan_id, lla, eth);
 	if (tmp==NULL) return 0;
 
 	ptmp = tmp->prefixes;
@@ -132,9 +137,9 @@ int router_add_prefix(router_list_t *list, struct in6_addr lla, struct ether_add
 }
 
 
-prefix_t* router_get_prefix(router_list_t *list, struct in6_addr lla, struct ether_addr eth, struct in6_addr prefix, int mask)
+prefix_t* router_get_prefix(router_list_t *list, uint16_t vlan_id, struct in6_addr lla, struct ether_addr eth, struct in6_addr prefix, int mask)
 {
-	router_list_t* router = router_get(list, lla, eth);
+	router_list_t* router = router_get(list, vlan_id, lla, eth);
 	prefix_t *ptmp;
 
 	if (router==NULL) {
@@ -150,21 +155,21 @@ prefix_t* router_get_prefix(router_list_t *list, struct in6_addr lla, struct eth
 	return NULL;
 }
 
-int router_has_prefix(router_list_t *list, struct in6_addr lla, struct ether_addr eth, struct in6_addr prefix, int mask) {
-        if (router_get_prefix(list, lla, eth, prefix, mask)==NULL) {
+int router_has_prefix(router_list_t *list, uint16_t vlan_id, struct in6_addr lla, struct ether_addr eth, struct in6_addr prefix, int mask) {
+        if (router_get_prefix(list, vlan_id, lla, eth, prefix, mask)==NULL) {
 		return 0;
 	}
 	return 1;
 }
 
 
-int router_add_address(router_list_t *list, struct ether_addr eth, struct in6_addr addr)
+int router_add_address(router_list_t *list, uint16_t vlan_id, struct ether_addr eth, struct in6_addr addr)
 {
 	router_list_t *tmp = list;
 	address_t *new = NULL;
 
 	
-	if(router_has_address(list,eth,addr))
+	if(router_has_address(list,vlan_id,eth,addr))
 	{
 		fprintf(stderr,"Address already in list\n");
 		return 0;
@@ -203,12 +208,12 @@ int router_add_address(router_list_t *list, struct ether_addr eth, struct in6_ad
 }
 
 
-int router_has_address(router_list_t *list, struct ether_addr eth, struct in6_addr addr)
+int router_has_address(router_list_t *list, uint16_t vlan_id, struct ether_addr eth, struct in6_addr addr)
 {
 	router_list_t *tmp = list;
 	while(tmp != NULL)
 	{
-		if(!MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
+		if(in_vlan(tmp, vlan_id) && !MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
 		{
 				address_t *atmp = tmp->addresses;
 				while(atmp != NULL)
@@ -251,7 +256,7 @@ void print_routers(router_list_t *list)
 
 		ipv6_ntoa(lla,tmp->lla);
 		strncpy(eth,ether_ntoa(&(tmp->mac)), ETH_ADDRSTRLEN);
-		fprintf(stderr,"Router (%s,%s) :\n", eth, lla);
+		fprintf(stderr,"Router (VLAN%d, %s,%s) :\n", tmp->vlan_id, eth, lla);
 		fprintf(stderr,"    RA params:\n");
 		fprintf(stderr,"        curhoplimit:     %u\n", tmp->param_curhoplimit);
 		fprintf(stderr,"        flags:           [");

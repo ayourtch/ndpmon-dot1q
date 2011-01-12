@@ -43,6 +43,8 @@ typedef struct prefix{
     the RA params are wellformed and to send faked RA in the counter measures plugin.
 */
 typedef struct router_list{
+	/** The VLAN ID where the router sits */
+	uint16_t vlan_id;
 	/** The routers ETHERNET address.*/
 	struct ether_addr mac;
 	/** The router link local address.*/
@@ -72,11 +74,11 @@ typedef struct router_list{
 	struct router_list *next;
 }router_list_t;
 
-router_list_t * router_get(router_list_t *list, struct in6_addr lla, struct ether_addr eth);
+router_list_t * router_get(router_list_t *list, uint16_t vlan_id, struct in6_addr lla, struct ether_addr eth);
 
-int is_router_lla_in(router_list_t *list, struct in6_addr lla);
-int is_router_mac_in(router_list_t *list, struct ether_addr eth);
-int router_has_router(router_list_t *list, struct in6_addr lla, struct ether_addr eth);
+int is_router_lla_in(router_list_t *list, uint16_t vlan_id, struct in6_addr lla);
+int is_router_mac_in(router_list_t *list, uint16_t vlan_id, struct ether_addr eth);
+int router_has_router(router_list_t *list, uint16_t vlan_id, struct in6_addr lla, struct ether_addr eth);
 
 /** Adds a router to the list a routers.
     Changed in order to take the additional router parameters.
@@ -89,14 +91,14 @@ int router_has_router(router_list_t *list, struct in6_addr lla, struct ether_add
     @param reachable_timer     RA Parameter: Reachable timer.
     @param retrans_timer RA Parameter: Retransmission timer.
 */
-int router_add(router_list_t **list, struct ether_addr* eth, struct in6_addr* lla,
+int router_add(router_list_t **list, uint16_t vlan_id, struct ether_addr* eth, struct in6_addr* lla,
         uint8_t curhoplimit, uint8_t flags_reserved, uint16_t router_lifetime, uint32_t reachable_timer, uint32_t retrans_timer, uint32_t param_mtu, int params_volatile);
-int router_add_prefix(router_list_t *list, struct in6_addr lla, struct ether_addr eth, struct in6_addr prefix, int mask, uint8_t flags_reserved, uint32_t valid_lifetime, uint32_t preferred_lifetime);
-int router_has_prefix(router_list_t *list, struct in6_addr lla, struct ether_addr eth, struct in6_addr prefix, int mask);
-prefix_t* router_get_prefix(router_list_t *list, struct in6_addr lla, struct ether_addr eth, struct in6_addr prefix, int mask);
+int router_add_prefix(router_list_t *list, uint16_t vlan_id, struct in6_addr lla, struct ether_addr eth, struct in6_addr prefix, int mask, uint8_t flags_reserved, uint32_t valid_lifetime, uint32_t preferred_lifetime);
+int router_has_prefix(router_list_t *list, uint16_t vlan_id, struct in6_addr lla, struct ether_addr eth, struct in6_addr prefix, int mask);
+prefix_t* router_get_prefix(router_list_t *list, uint16_t vlan_id, struct in6_addr lla, struct ether_addr eth, struct in6_addr prefix, int mask);
 
-int router_has_address(router_list_t *list, struct ether_addr eth, struct in6_addr addr);
-int router_add_address(router_list_t *list, struct ether_addr eth, struct in6_addr addr);
+int router_has_address(router_list_t *list, uint16_t vlan_id, struct ether_addr eth, struct in6_addr addr);
+int router_add_address(router_list_t *list, uint16_t vlan_id, struct ether_addr eth, struct in6_addr addr);
 
 int nb_router(router_list_t *routers);
 void print_routers(router_list_t *list);

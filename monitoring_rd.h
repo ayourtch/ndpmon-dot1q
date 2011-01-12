@@ -69,6 +69,6 @@ Olivier Festor, Scientific Leader of the MADYNEs Project, 20 August 2006
 /*Test if the RD message comes from a router with IP6 and MAC address
  *specified in the configuration file
  */
-int watch_rd_src(char* message, struct ether_header* eptr, struct ip6_hdr* ipptr);
+int watch_rd_src(char* message, uint16_t vlan_id, struct ether_header* eptr, struct ip6_hdr* ipptr);
 
 #endif

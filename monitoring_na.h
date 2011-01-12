@@ -72,7 +72,7 @@ Olivier Festor, Scientific Leader of the MADYNEs Project, 20 August 2006
 /*Test if the NA enable the router flag and if true
  *test if this neighbor is an official router
  */
-int watch_R_flag(char* message, struct ether_header* eptr, struct ip6_hdr* ipptr, struct nd_neighbor_advert* naptr);
+int watch_R_flag(char* message, uint16_t vlan_id, struct ether_header* eptr, struct ip6_hdr* ipptr, struct nd_neighbor_advert* naptr);
 
 
 /*Test if the NA is doing Duplicate Address Detection DOS

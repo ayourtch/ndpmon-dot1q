@@ -299,7 +299,6 @@ void parse_routers()
 				else if( !STRCMP(param->name,"vlan_id") ) {
 					text = (char*)XML_GET_CONTENT(param->children);
 					vlan_id = atoi(text!=NULL?text:"4095");
-					fprintf(stderr, "Read vlan id: %d\n", vlan_id);
 				}
 				else if( !STRCMP(param->name,"lla") ) {
 					inet_pton(AF_INET6,(char *)XML_GET_CONTENT(param->children), &lla);
@@ -740,7 +739,6 @@ void parse_cache(char *filename)
 					else if( !STRCMP(param->name,"vlan_id") ) {
 						char *text = (char*)XML_GET_CONTENT(param->children);
 						vlan_id = atoi(text!=NULL?text:"4095");
-						fprintf(stderr, "Read vlan id: %d\n", vlan_id);
 					}
 					else if( !STRCMP(param->name,"time") )
 					{

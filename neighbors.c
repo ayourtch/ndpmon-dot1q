@@ -6,6 +6,10 @@
 #include "alarm.h"
 #include "membounds.h"
 
+int in_vlan(neighbor_list_t *tmp, int vlan_id) {
+	return ((vlan_id == 0) || 
+		(tmp->vlan_id == vlan_id));
+}
 
 int neighbor_has_lla(neighbor_list_t *list, uint16_t vlan_id, struct ether_addr eth, struct in6_addr lla)
 {
@@ -13,7 +17,7 @@ int neighbor_has_lla(neighbor_list_t *list, uint16_t vlan_id, struct ether_addr 
 
 	while(tmp != NULL)
 	{
-		if(!MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
+		if(in_vlan(tmp, vlan_id) && !MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
 		{
 			if(IN6_ARE_ADDR_EQUAL(&lla,&(tmp->lla)))
 				return 1;
@@ -33,7 +37,7 @@ int neighbor_has_ip(neighbor_list_t *list, uint16_t vlan_id, struct ether_addr e
 
 	while(tmp != NULL)
 	{
-		if(!MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
+		if(in_vlan(tmp, vlan_id) && !MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
 		{
 			address_t *atmp = tmp->addresses;
 			while(atmp != NULL)
@@ -72,7 +76,7 @@ int add_neighbor_ip(neighbor_list_t **list, uint16_t vlan_id, struct ether_addr 
 
 	while(tmp != NULL)
 	{
-		if(!MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
+		if(in_vlan(tmp, vlan_id) && !MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
 		{
 			address_t *atmp = tmp->addresses;
 			if(atmp == NULL)
@@ -97,7 +101,7 @@ int del_neighbor_ip(neighbor_list_t **list, uint16_t vlan_id, struct ether_addr 
 
 	while(tmp != NULL)
 	{
-		if(!MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
+		if(in_vlan(tmp, vlan_id) && !MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
 		{
 			address_t *atmp = tmp->addresses, *atmp2 = tmp->addresses;
 			while(atmp != NULL)
@@ -132,7 +136,7 @@ int neighbor_set_last_mac(neighbor_list_t **list, uint16_t vlan_id, struct in6_a
 
 	while(tmp != NULL)
 	{
-		if(IN6_ARE_ADDR_EQUAL(&lla,&(tmp->lla)))
+		if(in_vlan(tmp, vlan_id) && IN6_ARE_ADDR_EQUAL(&lla,&(tmp->lla)))
 		{
 			tmp->previous_mac = eth;
 			return 1;
@@ -150,7 +154,7 @@ struct ether_addr neighbor_get_last_mac(neighbor_list_t *list, uint16_t vlan_id,
 
 	while(tmp != NULL)
 	{
-		if(IN6_ARE_ADDR_EQUAL(&lla,&(tmp->lla)))
+		if(in_vlan(tmp, vlan_id) && IN6_ARE_ADDR_EQUAL(&lla,&(tmp->lla)))
 		{
 			return tmp->previous_mac;
 		}
@@ -168,7 +172,7 @@ int neighbor_has_old_mac(neighbor_list_t *list, uint16_t vlan_id, struct in6_add
 
 	while(tmp != NULL)
 	{
-		if(IN6_ARE_ADDR_EQUAL(&lla,&(tmp->lla)))
+		if(in_vlan(tmp, vlan_id) && IN6_ARE_ADDR_EQUAL(&lla,&(tmp->lla)))
 		{
 			ethernet_t *etmp = tmp->old_mac;
 			while(etmp != NULL)
@@ -192,7 +196,7 @@ int neighbor_update_mac(neighbor_list_t **list, uint16_t vlan_id, struct in6_add
 
 	while(tmp != NULL)
 	{
-		if(IN6_ARE_ADDR_EQUAL(&lla,&(tmp->lla)))
+		if(in_vlan(tmp, vlan_id) && IN6_ARE_ADDR_EQUAL(&lla,&(tmp->lla)))
 		{
 			add_neighbor_old_mac(list,vlan_id,lla,tmp->mac);
 			del_neighbor_old_mac(list,vlan_id,lla,new_mac);
@@ -226,7 +230,7 @@ int add_neighbor_old_mac(neighbor_list_t **list, uint16_t vlan_id, struct in6_ad
 
 	while(tmp != NULL)
 	{
-		if(IN6_ARE_ADDR_EQUAL(&lla,&(tmp->lla)))
+		if(in_vlan(tmp, vlan_id) && IN6_ARE_ADDR_EQUAL(&lla,&(tmp->lla)))
 		{
 			ethernet_t *etmp = tmp->old_mac;
 			if(etmp == NULL)
@@ -255,7 +259,7 @@ int del_neighbor_old_mac(neighbor_list_t **list, uint16_t vlan_id, struct in6_ad
 
 	while(tmp != NULL)
 	{
-		if(IN6_ARE_ADDR_EQUAL(&lla,&(tmp->lla)))
+		if(in_vlan(tmp, vlan_id) && IN6_ARE_ADDR_EQUAL(&lla,&(tmp->lla)))
 		{
 			ethernet_t *etmp = tmp->old_mac, *etmp2 = tmp->old_mac;
 			while(etmp != NULL)
@@ -338,6 +342,7 @@ int add_neighbor(neighbor_list_t **list, uint16_t vlan_id, struct ether_addr eth
 	}
 
 	new->mac = eth;
+	new->vlan_id = vlan_id;
 /* ADDED */
 	new->first_mac_seen = eth;
         new->trouble = 0;
@@ -369,7 +374,7 @@ int set_neighbor_lla(neighbor_list_t **list, uint16_t vlan_id, struct ether_addr
 
 	while(tmp != NULL)
 	{
-		if(!MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
+		if(in_vlan(tmp, vlan_id) && !MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
 		{
 			tmp->lla = lla;
 			return 1;
@@ -389,7 +394,7 @@ int reset_neighbor_timer(neighbor_list_t **list, uint16_t vlan_id, struct ether_
 
 	while(tmp != NULL)
 	{
-		if(!MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
+		if(in_vlan(tmp, vlan_id) && !MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
 		{
 			/*If the station has been inactive for a long time: 6 months*/
 			char str_ip[IP6_STR_SIZE];
@@ -420,7 +425,7 @@ int reset_neighbor_address_timer(neighbor_list_t **list, uint16_t vlan_id, struc
 
 	while(tmp != NULL)
 	{
-		if(!MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
+		if(in_vlan(tmp, vlan_id) && !MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
 		{
 			address_t *atmp = tmp->addresses;
 			while(atmp != NULL)
@@ -449,7 +454,7 @@ int set_neighbor_address_timer(neighbor_list_t **list, uint16_t vlan_id, struct 
 
 	while(tmp != NULL)
 	{
-		if(!MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
+		if(in_vlan(tmp, vlan_id) && !MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
 		{
 			address_t *atmp = tmp->addresses;
 			while(atmp != NULL)
@@ -478,7 +483,7 @@ int set_neighbor_first_address_timer(neighbor_list_t **list, uint16_t vlan_id, s
 
 	while(tmp != NULL)
 	{
-		if(!MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
+		if(in_vlan(tmp, vlan_id) && !MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
 		{
 			address_t *atmp = tmp->addresses;
 			while(atmp != NULL)
@@ -507,7 +512,7 @@ int set_neighbor_timer(neighbor_list_t **list, uint16_t vlan_id, struct ether_ad
 
 	while(tmp != NULL)
 	{
-		if(!MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
+		if(in_vlan(tmp, vlan_id) && !MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
 		{
 			tmp->timer = value;
 			return 1;
@@ -525,7 +530,7 @@ int is_neighbor_by_mac(neighbor_list_t *list, uint16_t vlan_id, struct ether_add
 
 	while(tmp != NULL)
 	{
-		if(!MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
+		if(in_vlan(tmp, vlan_id) && !MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
 			return 1;
 
 		tmp = tmp->next;
@@ -540,7 +545,7 @@ int is_neighbor_by_lla(neighbor_list_t *list, uint16_t vlan_id, struct in6_addr 
 
 	while(tmp != NULL)
 	{
-		if(IN6_ARE_ADDR_EQUAL(&lla,&(tmp->lla)))
+		if(in_vlan(tmp, vlan_id) && IN6_ARE_ADDR_EQUAL(&lla,&(tmp->lla)))
 			return 1;
 
 		tmp = tmp->next;
@@ -558,7 +563,7 @@ int is_neighbor_by_ip(neighbor_list_t *list, uint16_t vlan_id, struct in6_addr a
 		address_t *atmp = tmp->addresses;
 		while(atmp != NULL)
 		{
-			if(IN6_ARE_ADDR_EQUAL(&addr,&(atmp->address)))
+			if(in_vlan(tmp, vlan_id) && IN6_ARE_ADDR_EQUAL(&addr,&(atmp->address)))
 				return 1;
 
 			atmp = atmp->next;
@@ -576,7 +581,7 @@ neighbor_list_t * get_neighbor_by_mac(neighbor_list_t *list, uint16_t vlan_id, s
 
 	while(tmp != NULL)
 	{
-		if(!MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
+		if(in_vlan(tmp, vlan_id) && !MEMCMP(&eth,&(tmp->mac), sizeof(struct ether_addr)))
 			return tmp;
 
 		tmp = tmp->next;
@@ -591,7 +596,7 @@ neighbor_list_t * get_neighbor_by_lla(neighbor_list_t *list, uint16_t vlan_id, s
 
 	while(tmp != NULL)
 	{
-		if(IN6_ARE_ADDR_EQUAL(&lla,&(tmp->lla)))
+		if(in_vlan(tmp, vlan_id) && IN6_ARE_ADDR_EQUAL(&lla,&(tmp->lla)))
 			return tmp;
 
 		tmp = tmp->next;
@@ -609,7 +614,7 @@ neighbor_list_t * get_neighbor_by_ip(neighbor_list_t *list, uint16_t vlan_id, st
 		address_t *atmp = tmp->addresses;
 		while(atmp != NULL)
 		{
-			if(IN6_ARE_ADDR_EQUAL(&addr,&(atmp->address)))
+			if(in_vlan(tmp, vlan_id) && IN6_ARE_ADDR_EQUAL(&addr,&(atmp->address)))
 				return tmp;
 
 			atmp = atmp->next;
@@ -646,7 +651,7 @@ void print_neighbors(neighbor_list_t *list)
 
 		ipv6_ntoa(lla,tmp->lla);
 		strncpy(eth,ether_ntoa(&(tmp->mac)), ETH_ADDRSTRLEN);
-		fprintf(stderr,"Neighbor (%s,%s,%ld):\n", eth, lla, tmp->timer);
+		fprintf(stderr,"Neighbor (VLAN%d, %s,%s,%ld):\n", tmp->vlan_id, eth, lla, tmp->timer);
 		if(atmp != NULL)
 		{
 			fprintf(stderr,"IPv6 Global Addresses: ");
@@ -879,15 +884,15 @@ int clean_neighbor_addresses(neighbor_list_t **list, uint16_t vlan_id, struct et
 }
 
 
-int clean_neighbors(neighbor_list_t **list, uint16_t vlan_id)
+int clean_neighbors(neighbor_list_t **list)
 {
 	neighbor_list_t *tmp = *list, *ntodel = NULL;
 
 	while(tmp != NULL)
 	{
 		ntodel = tmp;
-		clean_neighbor_addresses(list,vlan_id,tmp->mac);
-		clean_neighbor_old_mac(list,vlan_id,tmp->mac);
+		clean_neighbor_addresses(list,0,tmp->mac);
+		clean_neighbor_old_mac(list,0,tmp->mac);
 		tmp = tmp->next;
 		free(ntodel);
 	}

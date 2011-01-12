@@ -366,10 +366,8 @@ void handler(int n)
 	syslog(LOG_NOTICE,"Program Stopped...");
 	closelog();
 	/* free data structures */
-	for(i=0;i<=4095;i++) {
-		clean_routers(&routers);
-		clean_neighbors(&neighbors, i);
-	}
+	clean_routers(&routers);
+	clean_neighbors(&neighbors);
 #ifdef _MACRESOLUTION_
 	clean_manufacturer(&manuf);
 #endif

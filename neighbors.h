@@ -18,6 +18,7 @@ typedef struct ethernet{
 }ethernet_t;
 
 typedef struct neighbor_list{
+	int vlan_id;
 	struct ether_addr mac;
 /* ADDED*/
 	struct ether_addr first_mac_seen;
@@ -74,7 +75,7 @@ void print_neighbors(neighbor_list_t *list);
 
 int clean_neighbor_old_mac(neighbor_list_t **list, uint16_t vlan_id, struct ether_addr eth);
 int clean_neighbor_addresses(neighbor_list_t **list, uint16_t vlan_id, struct ether_addr eth);
-int clean_neighbors(neighbor_list_t **list, uint16_t vlan_id);
+int clean_neighbors(neighbor_list_t **list);
 
 /* New Station ? */
 int new_station(neighbor_list_t **list, uint16_t vlan_id, struct ether_addr eth, struct in6_addr addr, int *new_eth);

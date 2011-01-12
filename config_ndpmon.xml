@@ -17,6 +17,22 @@
         </actions_high_pri>
         <use_reverse_hostlookups>1</use_reverse_hostlookups>
     <routers>
+        <router>
+                <vlan_id>105</vlan_id>
+                <mac>0:1b:d5:94:e4:c6</mac>
+                <lla>fe80:0:0:0:21b:d5ff:fe94:e4c6</lla>
+		<prefixes>
+			<prefix>
+				<address>2001:db8:1234:5678:0:0:0:0</address>
+				<mask>64</mask>
+				<param_flags_reserved>224</param_flags_reserved>
+				<param_valid_time>2592000</param_valid_time>
+				<param_preferred_time>604800</param_preferred_time>
+			</prefix>
+		</prefixes>
+		<addresses/>
+        </router>
+
 	<!-- Example of router definition
 	<router>
    		<mac>00:11:22:33:44:55</mac>

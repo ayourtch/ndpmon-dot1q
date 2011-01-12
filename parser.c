@@ -286,6 +286,7 @@ void parse_routers()
 			prefix_t* tmp_prefix = NULL;
 			address_t* tmp_address = NULL;
 			xmlNode *param = router->children;
+			int vlan_id;
 			while(param != NULL) {
 				if (param->type != XML_ELEMENT_NODE) {
 					param = param->next;
@@ -294,6 +295,11 @@ void parse_routers()
                                 /* We have an XML Element: */
 				if( !STRCMP(param->name,"mac") ) {
 					memcpy(&mac,ether_aton((char *)XML_GET_CONTENT(param->children)),sizeof(struct ether_addr));
+				}
+				else if( !STRCMP(param->name,"vlan_id") ) {
+					text = (char*)XML_GET_CONTENT(param->children);
+					vlan_id = atoi(text!=NULL?text:"4095");
+					fprintf(stderr, "Read vlan id: %d\n", vlan_id);
 				}
 				else if( !STRCMP(param->name,"lla") ) {
 					inet_pton(AF_INET6,(char *)XML_GET_CONTENT(param->children), &lla);
@@ -718,7 +724,7 @@ void parse_cache(char *filename)
 			struct in6_addr lla;
 			struct ether_addr mac, eth;
 			xmlNode *param = neighbor->children;
-			uint16_t vlan_id;
+			uint16_t vlan_id = 4095;
 
 			while(param != NULL)
 			{
@@ -730,6 +736,11 @@ void parse_cache(char *filename)
 						memcpy(&mac,ether_aton(c),sizeof(struct ether_addr));
 /*						memcpy(&mac,ether_aton((char *)XML_GET_CONTENT(param->children)),sizeof(struct ether_addr));	*/
 						add_neighbor(&neighbors, vlan_id, mac);
+					}
+					else if( !STRCMP(param->name,"vlan_id") ) {
+						char *text = (char*)XML_GET_CONTENT(param->children);
+						vlan_id = atoi(text!=NULL?text:"4095");
+						fprintf(stderr, "Read vlan id: %d\n", vlan_id);
 					}
 					else if( !STRCMP(param->name,"time") )
 					{
@@ -1214,12 +1225,22 @@ void write_cache()
 		/* to format the time */
 		time_t timep;
 		char time_str[27];
+		char vlan_str[10];
 
 		/* Start an element named "neighbor" as child of neighbor_list. */
 		rc = xmlTextWriterStartElement(writer, BAD_CAST "neighbor");
 		if (rc < 0)
 		{
 			printf("testXmlwriterFilename: Error at xmlTextWriterStartElement\n");
+			return;
+		}
+		/* Attribute vlan_id */
+
+		snprintf(vlan_str,9,"%d",(int) tmp->vlan_id);
+		rc = xmlTextWriterWriteFormatElement(writer, BAD_CAST "vlan_id", "%s", vlan_str);
+		if (rc < 0)
+		{
+			printf("testXmlwriterFilename: Error at xmlTextWriterWriteFormatElement\n");
 			return;
 		}
 

@@ -1,8 +1,9 @@
 <!ELEMENT config_neighbor_list (neighbor_list)>
 <!ELEMENT neighbor_list (neighbor*)>
 
-<!ELEMENT neighbor (mac, lla, time,addresses, old_mac?)>
+<!ELEMENT neighbor (vlan_id, mac, lla, time,addresses, old_mac?)>
 
+<!ELEMENT vlan_id (#PCDATA)>
 <!ELEMENT mac (#PCDATA)>
 <!ATTLIST mac vendor CDATA #IMPLIED>
 <!ELEMENT lla (#PCDATA)>
